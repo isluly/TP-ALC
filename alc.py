@@ -219,3 +219,25 @@ def resolverDLT3D(Q):
     # extender m a 3x4
     return m.reshape(3,4)
 
+
+def obtenerQ2d(imgPts, objPts):
+    N = len(objPts)
+    Q = np.zeros((2 * N, 9))
+    for i in range(N):
+        u, v = imgPts[i][0], imgPts[i][1]
+        P = [objPts[i][0], objPts[i][1], 1.0]
+        # por cada coordenada del punto 2D, se agregan dos filas a Q
+        for k in range(3):
+            # va armando Q por grupos de columnas, cada grupo de columnas corresponden a un punto 2D
+            # columnas 0-2 : P[k]
+            Q[2*i,k] = P[k]
+            # columnas 3-5 : 0
+            Q[2*i, 3 + k] = 0.0
+            # columnas 6-8: -u*P[k]
+            Q[2*i, 6 + k] = -u * P[k]
+            
+            # lo mismo para la segunda fila
+            Q[2*i + 1, k] = 0.0
+            Q[2*i + 1, 3 + k] = P[k]
+            Q[2*i + 1, 6 + k] = -v * P[k]
+    return Q

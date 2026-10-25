@@ -92,6 +92,63 @@ def calculaLDV(A):
       np.array(D, dtype=float),
       np.array(V, dtype=float),
   )
+  
+
+def esSDP(A, atol=1e-8):
+  if A is None:
+    return False
+
+  n = len(A)
+  for i in range(n):
+    for j in range(n):
+      if abs(A[i][j] - A[j][i]) > atol:
+        return False
+
+
+  ldv = calculaLDV(A)
+  if ldv is None:
+    return False
+
+  _, D, _ = ldv
+
+
+  for i in range(n):
+    if D[i, i] <= atol:
+      return False
+
+  return True
+
+def calculaCholesky(A, atol=1e-10):
+    A = np.array(A, dtype=float)
+    
+    if not esSDP(A):
+        return None
+        
+    L, D, _ = calculaLDV(A)
+    
+    L = np.array(L, dtype=float)
+    D = np.array(D, dtype=float)
+    n = len(A)
+
+    es_2d = isinstance(D[0], (list, np.ndarray))
+    
+    R = np.zeros((n, n))
+    for j in range(n):
+        if es_2d:
+            val_d = float(D[j, j])
+        else:
+            val_d = float(D[j])
+            
+        if val_d <= atol:
+            return None
+            
+  
+        raiz_dj = np.sqrt(val_d)
+        
+        for i in range(n):
+            R[i, j] = L[i, j] * raiz_dj
+            
+    return R
 
 
 def norma(x,p):
@@ -262,3 +319,19 @@ def armarA(Hlist):
         A[2*i] = v(H,0,1)
         A[2*i + 1] = v(H,0,0) - v(H,1,1)
     return A
+
+def calcularMatrizK2D(A):
+    AtA = multiplicacion_matrices(transpuesta(A),A) 
+    S,D = diagRH(AtA) # busco b chico tq Ab = 0 y propongo A = SDV
+    b = S[:,-1] # lo mismo que el anterior, minimizando b es la ultima columna de s
+    b = b / norma(b,2) # normalizo a norma 1
+    
+    B = np.array([[b[0], b[1], b[3]], [b[1], b[2], b[4]], [b[3], b[4], b[5]]])
+    if B[0,0] < 0:
+        B = -B # quiero que sea positiva para usar cholesky
+        
+    L = calculaCholesky(B) # B = L.T L y si B = K.T(-1) K(-1) entonces K = L.T a la (-1)
+    if L is None:
+        return None
+    K = matriz_inversa(transpuesta(L))
+    return K / K[2,2] # se que K[2,2] real tiene que dar 1 por la forma de k, como cholesky puede dar una escala de K, lo divido por ese numero de la esquina asi queda en 1

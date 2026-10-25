@@ -241,3 +241,24 @@ def obtenerQ2d(imgPts, objPts):
             Q[2*i + 1, 3 + k] = P[k]
             Q[2*i + 1, 6 + k] = -v * P[k]
     return Q
+
+def v(H,i,j):
+    # i , j son los indices de las columnas de H
+    hi, hj = H[:,i], H[:,j]
+    return np.array([
+        hi[0]*hj[0], # esto seria ci1 * cj1
+        hi[0]*hj[1] + hi[1]*hj[0], # ci1*cj2 + ci2*cj1
+        hi[1]*hj[1],
+        hi[0]*hj[2] + hi[2]*hj[0],
+        hi[1]*hj[2] + hi[2]*hj[1],
+        hi[2]*hj[2],
+    ])
+    
+def armarA(Hlist):
+    N = len(Hlist)
+    A = np.zeros((2*N,6))
+    for i in range(N):
+        H = Hlist[i]
+        A[2*i] = v(H,0,1)
+        A[2*i + 1] = v(H,0,0) - v(H,1,1)
+    return A

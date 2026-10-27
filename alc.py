@@ -310,7 +310,7 @@ def resolverDLT3D(Q):
     return m.reshape(3,4)
 
 def devolverMatricesCalibracion3d(M):
-    # quiero M = K [R t] donde K es triangular superior, [R t] es ortogonal
+    # quiero M = K [R t] donde K es triangular superior, R es ortogonal
 
     if (np.shape(M) != (3,4)):
         print('M no cumple el tamaño de la matriz de proyeccion pedida')
@@ -325,9 +325,9 @@ def devolverMatricesCalibracion3d(M):
     m3 = M[2,:3] # m3 = (m31,m32,m33)
 
     # despejo las ecuaciones para u0, v0, skew, alfau, alfav (planteado en papel/en el note eventualmente...)
-    u0 = producto_escalar(m2,m1)
+    u0 = producto_escalar(m3,m1)
     v0 = producto_escalar(m2,m3)
-    alfaV = np.sqrt(producto_escalar(m2,m2) - producto_escalar(v0,v0))
+    alfaV = np.sqrt(producto_escalar(m2,m2) - v0*v0)
     skew = (producto_escalar(m1,m2) - producto_escalar(v0,u0)) / alfaV
     alfaU = np.sqrt(producto_escalar(m1,m1) - skew*skew - u0*u0)
 
@@ -386,7 +386,7 @@ def imgpts_del_cuadro(k):
 imgPts = imgpts_del_cuadro(0)
 Q = obtenerQ3d(imgPts,objPts)
 M = resolverDLT3D(Q)
-#R,T,K = devolverMatricesCalibracion3d(M)
+R,T,K = devolverMatricesCalibracion3d(M)
 
 
 # ejercicio 3

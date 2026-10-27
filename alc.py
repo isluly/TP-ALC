@@ -1,4 +1,6 @@
 import numpy as np
+import importlib
+cv2 = importlib.import_module("cv2")
 
 # MODULO ALC
 
@@ -50,6 +52,28 @@ def matriz_inversa(A):
                         I[k,j] = I[k,j] - factor * I[i,j]
         return I
 
+# creo que esta mal, hay que corregirla
+def QR_con_GS(A, tol = 1e-12, retorna_nops = False):
+    m,n = A.shape
+    if m != n:
+        return None
+    
+    Q = np.eye(n)
+    R = np.zeros((n,n))
+    nops = 0
+    for i in range(n):
+        v = A[:,i].copy()
+        for j in range(i):
+            Q[j,i] = A[:,i] / np.sqrt(A[:,i] + A[:,j]) ** 2
+            R[j,i] = Q[j,i] @ A[:,i]
+            v -= R[j,i] * Q[:,j]
+            nops += 2 * m + 1
+            R[i,i] = np.sqrt(v + tol) ** 2
+            
+    if retorna_nops:
+        return Q, R, nops
+    else:
+        return Q, R
 
 def calculaLDV(A):
   if A is None:
@@ -277,6 +301,44 @@ def resolverDLT3D(Q):
     return m.reshape(3,4)
 
 
+# aplicacion a datos que nos dieron, ej 2
+
+# puntos del mundo real de la forma(U,V,W) en cm?
+# matriz de 12 x 3
+objPts = np.array[
+    [0, 8, 0],
+    [10.4, 8, 0],
+    [0, 21.5, 0],
+    [10.4, 21.5, 0],
+    [0, 26.6, -10.95],
+    [10.4, 26.6, -10.95],
+    [0, 26.6, -24.45],
+    [10.4, 26.6, -24.45],
+    [19.4, 14.6, -10.95],
+    [19.4, 14.6, -24.45],
+    [19.4, 25, -10.95],
+    [19.4, 25, -24.45]
+]
+# pixeles [0,8,0] corresponde a los primeros valores que son u1v1
+# leemos el archivo, nos devuelve una tabla de 24 números por fila, cada fila es un cuadro(la primera corresponde a los 12 puntos de obj_pts)
+datos = np.loadtxt(r"C:\Users\Admin\Documents\TP1ALC\TP-ALC\calib\3d\detected_corners.txt")
+
+def imgpts_del_cuadro(k):
+    fila = datos[k]
+    imgPts = np.zeros((12,2))
+    for i in range(12):
+        imgPts[i,0] = fila[2*i] #ui
+        imgPts[i,1] = fila[2*i + 1] #vi
+    return imgPts
+
+imgPts = imgpts_del_cuadro(0)
+Q = obtenerQ3d(imgPts,objPts)
+M = resolverDLT3D(Q)
+#R,T,K = devolverMatricesCalibracion3d(M)
+
+
+# ejercicio 3
+
 def obtenerQ2d(imgPts, objPts):
     N = len(objPts)
     Q = np.zeros((2 * N, 9))
@@ -330,8 +392,69 @@ def calcularMatrizK2D(A):
     if B[0,0] < 0:
         B = -B # quiero que sea positiva para usar cholesky
         
-    L = calculaCholesky(B) # B = L.T L y si B = K.T(-1) K(-1) entonces K = L.T a la (-1)
+    L = calculaCholesky(B) # B = L L.T y si B = K.T(-1) K(-1) entonces K = L.T a la (-1)
     if L is None:
         return None
     K = matriz_inversa(transpuesta(L))
     return K / K[2,2] # se que K[2,2] real tiene que dar 1 por la forma de k, como cholesky puede dar una escala de K, lo divido por ese numero de la esquina asi queda en 1
+
+# devuelve matriz h
+def resolverDLT2D(Q):
+    A = multiplicacion_matrices(transpuesta(Q), Q)
+    S,D = diagRH(A)
+    h = S[:, -1] # ultima columna de S, que corresponde al vector singular del menor valor singular
+    h = h / norma(h,2) # normaliza el vector
+    # extender m a 3x4
+    return h.reshape(3,3)
+
+def producto_cruz(a,b):
+    return np.array([a[1]*b[2] - a[2]*b[1], - (a[2]*b[0] - a[0]*b[2]), a[0]*b[1] - a[1]*b[0]])
+
+def obtenerPose2D(Hj,K):
+    K_inv = matriz_inversa(K)
+    c1,c2,c3 = Hj[:,0], Hj[:,1], Hj[:,2]
+    # viene de la formula landa(u,v,1) = K[r1,r2,t][U,V,1].T = H[U,V,1].T
+    landa = 1/ norma(multiplicacion_matrices(K_inv,c1), 2)
+    r1 = landa * (multiplicacion_matrices(K_inv,c1))
+    r2 = landa * (multiplicacion_matrices(K_inv,c2))
+    t = landa *(multiplicacion_matrices(K_inv,c3))
+    
+    # el tablero debe quedar adelante de la camara entonces tz > 0
+    if t[2] < 0:
+        r1,r2,t = -r1,-r2,-t
+        
+    r3 = producto_cruz(r1,r2) # garantiza ortogonalidad
+    
+    # construimos R
+    R = np.zeros((3,3))
+    R[:,0],R[:,1],R[:,2] = r1,r2,r3
+    
+    # puede no quedar ortogonal por el ruido, ortononormalizamos con GS
+    resultado = QR_con_GS(R)
+    if resultado is not None:
+        R,_ = resultado # R seria la Q
+        
+    return R,t  
+
+# aplicacion al ejercicio
+# objPts del tablero: esquinas(30*i, 30*j), i=0..10, j=0..6
+objPts = []
+for j in range(7): # cant filas(j va de 0 a 6) con borde interno
+    for i in range(11): # lo mismo pero columnas
+        objPts.append([30.0*i,30.0*j,0.0]) # nos armamos el punto segun enunciado
+        
+objPts = np.array(objPts)
+
+Hlist = []
+for k in range(11):
+    imgPts = ... # hay que calcularlos desde la imagen?, no nos los dieron
+    Q = obtenerQ2d(imgPts,objPts)
+    H = resolverDLT2D(Q)
+    Hlist.append(H)
+    
+A = armarA(Hlist)
+K = calcularMatrizK2D(A)
+
+for H in Hlist:
+    R,t = obtenerPose2D(H,K)
+    

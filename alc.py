@@ -316,10 +316,6 @@ def devolverMatricesCalibracion3d(M):
         print('M no cumple el tamaño de la matriz de proyeccion pedida')
         return None, None, None
 
-    K = np.eye(3) # matriz de param intrinsecos
-    R = np.zeros((3,3)) # matriz de rotacion
-    t = np.zeros(3) # vector de traslacion
-
     m1 = M[0,:3] # m1 = (m11,m12,m13)
     m2 = M[1,:3] # m2 = (m21,m22,m23)
     m3 = M[2,:3] # m3 = (m31,m32,m33)
@@ -328,7 +324,7 @@ def devolverMatricesCalibracion3d(M):
     u0 = producto_escalar(m3,m1)
     v0 = producto_escalar(m2,m3)
     alfaV = np.sqrt(producto_escalar(m2,m2) - v0*v0)
-    skew = (producto_escalar(m1,m2) - producto_escalar(v0,u0)) / alfaV
+    skew = (producto_escalar(m1,m2) - v0*u0) / alfaV
     alfaU = np.sqrt(producto_escalar(m1,m1) - skew*skew - u0*u0)
 
     # y con esos datos despejo [R t] (rt1, rt2, rt3 sus filas)
@@ -342,15 +338,12 @@ def devolverMatricesCalibracion3d(M):
     # [(m11,m12,m13,m14) - u0(rt3) - skew(rt2)] / alfaU = rt1
     rt1 = (M[0,: ] - u0*rt3 - skew*rt2) / alfaU
 
-    # listo tengo todo! lo pongo en su lugar
-    K[0,:] = np.array([alfaU, skew, u0])
-    K[1,1:] = np.array([alfaV, v0])
-    R[0,:] = rt1[:3]
-    R[1,:] = rt2[:3]
-    R[2,:] = rt3[:3]
-    t = np.array(rt1[3], rt2[3], rt3[3])
+    # listo tengo todo! armo K [R t]
+    K = np.array([[alfaU, skew, u0], [0, alfaV, v0], [0,0,1]]) # matriz de param intrinsecos
+    R = np.array([rt1[:3], rt2[:3], rt3[:3]]) # matriz de rotacion
+    t = np.array(rt1[3], rt2[3], rt3[3]) # vector de traslacion
 
-    return R, t, K # R, t, K
+    return R, t, K
 
 
 # aplicacion a datos que nos dieron, ej 2

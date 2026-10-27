@@ -1,6 +1,4 @@
 import numpy as np
-import importlib
-cv2 = importlib.import_module("cv2")
 
 # MODULO ALC
 

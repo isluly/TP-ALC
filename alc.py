@@ -233,6 +233,17 @@ def producto_interno(x, y):
             res[i, j] = x[i] * y[j]
     return res
 
+def producto_escalar(v,w):
+    if (len(v) != len(w)):
+        print('No se puede')
+        return None
+
+    res = 0
+    for i in range(0, len(v)):
+        res += v[i]*w[i]
+
+    return res
+
 # reemplazar @ por multiplicacion_matrices
 def diagRH(A, tol=1e-15, K=1e5):
     n = A.shape[0]
@@ -297,6 +308,49 @@ def resolverDLT3D(Q):
     m = m / norma(m,2) # normaliza el vector
     # extender m a 3x4
     return m.reshape(3,4)
+
+def devolverMatricesCalibracion3d(M):
+    # quiero M = K [R t] donde K es triangular superior, [R t] es ortogonal
+
+    if (np.shape(M) != (3,4)):
+        print('M no cumple el tamaño de la matriz de proyeccion pedida')
+        return None, None, None
+
+    K = np.eye(3) # matriz de param intrinsecos
+    R = np.zeros((3,3)) # matriz de rotacion
+    t = np.zeros(3) # vector de traslacion
+
+    m1 = M[0,:3] # m1 = (m11,m12,m13)
+    m2 = M[1,:3] # m2 = (m21,m22,m23)
+    m3 = M[2,:3] # m3 = (m31,m32,m33)
+
+    # despejo las ecuaciones para u0, v0, skew, alfau, alfav (planteado en papel/en el note eventualmente...)
+    u0 = producto_escalar(m2,m1)
+    v0 = producto_escalar(m2,m3)
+    alfaV = np.sqrt(producto_escalar(m2,m2) - producto_escalar(v0,v0))
+    skew = (producto_escalar(m1,m2) - producto_escalar(v0,u0)) / alfaV
+    alfaU = np.sqrt(producto_escalar(m1,m1) - skew*skew - u0*u0)
+
+    # y con esos datos despejo [R t] (rt1, rt2, rt3 sus filas)
+    rt3 = M[2,:] # (r31,r32,r33,t3) = (m31,m32,m33,m34)
+
+    # (m21,m22,m23,m24) = alfaV(rt2) + v0(rt3)
+    # [(m21,m22,m23,m24) - v0(r31,r32,r33,t3)] / alfaV = (r21,r22,r23,t2)
+    rt2 = (M[1,:] - v0*rt3) / alfaV
+
+    # (m11,m12,m13,m14) = alfaU(rt1) + skew(rt2) + u0(rt3)
+    # [(m11,m12,m13,m14) - u0(rt3) - skew(rt2)] / alfaU = rt1
+    rt1 = (M[0,: ] - u0*rt3 - skew*rt2) / alfaU
+
+    # listo tengo todo! lo pongo en su lugar
+    K[0,:] = np.array([alfaU, skew, u0])
+    K[1,1:] = np.array([alfaV, v0])
+    R[0,:] = rt1[:3]
+    R[1,:] = rt2[:3]
+    R[2,:] = rt3[:3]
+    t = np.array(rt1[3], rt2[3], rt3[3])
+
+    return R, t, K # R, t, K
 
 
 # aplicacion a datos que nos dieron, ej 2

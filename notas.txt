@@ -1,1 +1,6 @@
 Acá anotamos dudas 
+Parametros opcionales de devolverMatriz...(chequear que R este ortogonal)
+Si hay que ortogonalizar R despues y como(GS?)
+Ej 3, sacar los pixeles a mano 
+Estamos bien encaminados para seguir con la parte de aplicaciones? falta normalizar algo?
+Hay que hacer los ejercicios en papel ademas del 1? NO 

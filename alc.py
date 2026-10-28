@@ -278,6 +278,9 @@ def diagRH(A, tol=1e-15, K=1e5):
     return S, D
 
 
+
+# aplicaciones en notebook
+# ejercicio 2
 def obtenerQ3d(imgPts, objPts):
     N = len(objPts)
     Q = np.zeros((2 * N, 12))
@@ -305,17 +308,24 @@ def resolverDLT3D(Q):
     A = multiplicacion_matrices(transpuesta(Q), Q)
     S,D = diagRH(A)
     m = S[:, -1] # ultima columna de S, que corresponde al vector singular del menor valor singular
-    m = m / norma(m,2) # normaliza el vector
+    m = m / norma(m,2) # normaliza el vector? o normalizamos cuando redimensionamos m?
     # extender m a 3x4
     return m.reshape(3,4)
 
-def devolverMatricesCalibracion3d(M):
+def devolverMatricesCalibracion3d(M,alfaU_igual_alfaV = False, skew_cero = False):
     # quiero M = K [R t] donde K es triangular superior, R es ortogonal
 
     if (np.shape(M) != (3,4)):
         print('M no cumple el tamaño de la matriz de proyeccion pedida')
         return None, None, None
 
+    # restricciones adicionales
+    # hay que ver si con estas restricciones no cambia la ortogonalidad de R
+    if skew_cero:
+        skew = 0.0
+    if alfaU_igual_alfaV:
+        alfaU = alfaV 
+    
     m1 = M[0,:3] # m1 = (m11,m12,m13)
     m2 = M[1,:3] # m2 = (m21,m22,m23)
     m3 = M[2,:3] # m3 = (m31,m32,m33)
@@ -326,7 +336,8 @@ def devolverMatricesCalibracion3d(M):
     alfaV = np.sqrt(producto_escalar(m2,m2) - v0*v0)
     skew = (producto_escalar(m1,m2) - v0*u0) / alfaV
     alfaU = np.sqrt(producto_escalar(m1,m1) - skew*skew - u0*u0)
-
+    
+    
     # y con esos datos despejo [R t] (rt1, rt2, rt3 sus filas)
     rt3 = M[2,:] # (r31,r32,r33,t3) = (m31,m32,m33,m34)
 
@@ -341,7 +352,7 @@ def devolverMatricesCalibracion3d(M):
     # listo tengo todo! armo K [R t]
     K = np.array([[alfaU, skew, u0], [0, alfaV, v0], [0,0,1]]) # matriz de param intrinsecos
     R = np.array([rt1[:3], rt2[:3], rt3[:3]]) # matriz de rotacion
-    t = np.array(rt1[3], rt2[3], rt3[3]) # vector de traslacion
+    t = np.array([rt1[3], rt2[3], rt3[3]]) # vector de traslacion
 
     return R, t, K
 
@@ -380,6 +391,7 @@ imgPts = imgpts_del_cuadro(0)
 Q = obtenerQ3d(imgPts,objPts)
 M = resolverDLT3D(Q)
 R,T,K = devolverMatricesCalibracion3d(M)
+
 
 
 # ejercicio 3

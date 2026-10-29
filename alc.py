@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 # MODULO ALC
 
@@ -17,6 +18,13 @@ def multiplicacion_matrices(A,B):
                 s += A[i,t] * B[t,j]
             c[i,j] = s
     return c
+
+# multiplicacion matriz por vector
+def matvec(A,v):
+    res = np.zeros(A.shape[0])
+    for i in range(A.shape[0]):
+        res[i] = producto_escalar(A[i,:],v)
+    return res
 
 def es_matriz_inversible(A):
     n,m = A.shape
@@ -62,11 +70,21 @@ def QR_con_GS(A, tol = 1e-12, retorna_nops = False):
     for i in range(n):
         v = A[:,i].copy()
         for j in range(i):
-            Q[j,i] = A[:,i] / np.sqrt(A[:,i] + A[:,j]) ** 2
-            R[j,i] = Q[j,i] @ A[:,i]
+            
+            R[j,i] = producto_escalar(Q[:,j],A[:,i])
+            # restamos la proyeccion
             v -= R[j,i] * Q[:,j]
             nops += 2 * m + 1
-            R[i,i] = np.sqrt(v + tol) ** 2
+        norma_v = norma(v,2)
+        nops += 2 * m 
+        
+        if norma_v < tol:
+            R[i,i] = 0
+            Q[:,i] = np.zeros(m)
+        else:
+            R[i,i] = norma_v
+            Q[:,i] = v / norma_v
+            nops += m
             
     if retorna_nops:
         return Q, R, nops
@@ -203,7 +221,7 @@ def metpot2k(A, tol=1e-13, K=10000):
     v = v / norma(v, 2)
     L = 0
     for k in range(K):
-        w = multiplicacion_matrices(A,v)
+        w = matvec(A,v)
         indice = componente_max(w)
         L = w[indice]
         if L == 0:
@@ -257,7 +275,7 @@ def diagRH(A, tol=1e-15, K=1e5):
     if nu < 1e-14:                     
         H = np.eye(n)
     else:
-        H = np.eye(n) - 2 * multiplicacion_matrices(transpuesta(u), u) / nu**2
+        H = np.eye(n) - 2 * producto_interno(u,u) / nu**2
 
     if n == 2:
         S = H
@@ -361,7 +379,7 @@ def devolverMatricesCalibracion3d(M,alfaU_igual_alfaV = False, skew_cero = False
 
 # puntos del mundo real de la forma(U,V,W) en cm?
 # matriz de 12 x 3
-objPts = np.array[
+objPts = np.array([
     [0, 8, 0],
     [10.4, 8, 0],
     [0, 21.5, 0],
@@ -374,7 +392,7 @@ objPts = np.array[
     [19.4, 14.6, -24.45],
     [19.4, 25, -10.95],
     [19.4, 25, -24.45]
-]
+])
 # pixeles [0,8,0] corresponde a los primeros valores que son u1v1
 # leemos el archivo, nos devuelve una tabla de 24 números por fila, cada fila es un cuadro(la primera corresponde a los 12 puntos de obj_pts)
 datos = np.loadtxt(r"C:\Users\Admin\Documents\TP1ALC\TP-ALC\calib\3d\detected_corners.txt")
@@ -471,10 +489,10 @@ def obtenerPose2D(Hj,K):
     K_inv = matriz_inversa(K)
     c1,c2,c3 = Hj[:,0], Hj[:,1], Hj[:,2]
     # viene de la formula landa(u,v,1) = K[r1,r2,t][U,V,1].T = H[U,V,1].T
-    landa = 1/ norma(multiplicacion_matrices(K_inv,c1), 2)
-    r1 = landa * (multiplicacion_matrices(K_inv,c1))
-    r2 = landa * (multiplicacion_matrices(K_inv,c2))
-    t = landa *(multiplicacion_matrices(K_inv,c3))
+    landa = 1/ norma(matvec(K_inv,c1), 2)
+    r1 = landa * (matvec(K_inv,c1))
+    r2 = landa * (matvec(K_inv,c2))
+    t = landa *(matvec(K_inv,c3))
     
     # el tablero debe quedar adelante de la camara entonces tz > 0
     if t[2] < 0:
@@ -502,16 +520,26 @@ for j in range(7): # cant filas(j va de 0 a 6) con borde interno
         
 objPts = np.array(objPts)
 
+#nos armamos nuestro df con esquinas marcadas
+imagenes = pd.read_csv(r'C:\Users\Admin\Documents\TP1ALC\TP-ALC\calib\coplanar\marcadas\esquinas.csv')
+
 Hlist = []
-for k in range(11):
-    imgPts = ... # hay que calcularlos desde la imagen?, no nos los dieron
+for nombre in imagenes["imagen"].unique():
+    d = imagenes[imagenes["imagen"] == nombre].sort_values('punto')
+    imgPts = d[["u","v"]].to_numpy() 
+    
     Q = obtenerQ2d(imgPts,objPts)
     H = resolverDLT2D(Q)
     Hlist.append(H)
     
+# armamos A con todas las homografias
 A = armarA(Hlist)
+
+# calculamos la matriz de parametros intrinsecos K
 K = calcularMatrizK2D(A)
 
-for H in Hlist:
+# calculamos la pose(R,t) para cada imagen del tablero
+poses = []
+for i,H in enumerate(Hlist):
     R,t = obtenerPose2D(H,K)
-    
+    poses.append((R,t))

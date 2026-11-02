@@ -8,9 +8,17 @@ Estamos bien encaminados para seguir con la parte de aplicaciones? falta normali
 Hay que hacer los ejercicios en papel ademas del 1? NO 
 
 NO CONSULTADAS
-en el ejercicio 3a usamos .unique() para distinguir las imágenes, no vale esto no?
+1. en el ejercicio 3a (implementación en el .py) usamos .unique() para distinguir las imágenes, no vale esto no?
 en la notebook lo cambiamos recorriendo toda la carpeta y poniendo un if que ignora el csv 
 pero creo que no es la solución más prolija. ¿Alguna sugerencia?  
+2. en la notebook los items de las consignas que pasaron no siempre coinciden con los del enunciado del tp
+(ver ejercicio 3) respetamos las consignas tal cual están escritas en el enunciado o en la notebook? La resolución
+es técnicamente la misma, es una pregunta puramente de presentación. 
+2 bis. En el enunciado del ejercicio 3 el item 1 pide que rango tiene que tener una matriz Q de 2n x 9 para asegurar solución única
+(salvo escala) de H, esto no está en la notebook se agrega, se ignora? sale fácil con rango-nulidad pero bueno idk
+3. En el enunciado del ejercicio2 del notebook pide calcular con los parametros opcionales como un O sin embargo en el enunciado dice y/O
+tenemos que calular con ambos a la vez?? es un error de enuciado?? 
+
 
 ACLARACIONES
 Antes de entregar es IMPORTANTE limpiar alc.py para que únicamente queden las funciones.

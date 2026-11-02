@@ -1,11 +1,23 @@
-Acá anotamos dudas 
+DUDAS: 
+
+CONSULTADAS
 Parametros opcionales de devolverMatriz...(chequear que R este ortogonal)
 Si hay que ortogonalizar R despues y como(GS?)
 Ej 3, sacar los pixeles a mano 
 Estamos bien encaminados para seguir con la parte de aplicaciones? falta normalizar algo?
 Hay que hacer los ejercicios en papel ademas del 1? NO 
 
+NO CONSULTADAS
+en el ejercicio 3a usamos .unique() para distinguir las imágenes, no vale esto no?
+en la notebook lo cambiamos recorriendo toda la carpeta y poniendo un if que ignora el csv 
+pero creo que no es la solución más prolija. ¿Alguna sugerencia?  
 
+ACLARACIONES
+Antes de entregar es IMPORTANTE limpiar alc.py para que únicamente queden las funciones.
+Ahora las estoy dejando para no borrar lo que van haciendo pero no hay que dejarlo pasar!
+
+
+OTRAS COSAS
 version bruta del 2:
 
 def devolverMatricesCalibracion3d(M,alfaU_igual_alfaV = False, skew_cero = False):

@@ -401,7 +401,7 @@ def resolverDLT3D(Q):
     A = multiplicacion_matrices(transpuesta(Q), Q)
     S,D = diagRH(A)
     m = S[:, -1] # ultima columna de S, que corresponde al vector singular del menor valor singular
-    m = m / norma(m,2) # normaliza el vector? o normalizamos cuando redimensionamos m?
+    m = m / norma(m,2) # normaliza el vector? 
     # extender m a 3x4
     return m.reshape(3,4)
 
@@ -455,6 +455,9 @@ def devolverMatricesCalibracion3d(M, restric=None): # restric puede ser None, 's
 
     # resuelvo K t = {columna 4 de M} para conseguir t
     t = res_tri(Kres, M[:,3], inferior=False)
+    
+    # normalizo Kres para que Kres[2][2] = 1
+    Kres = Kres / Kres[2][2]
 
     return Rres, t, Kres
 
@@ -480,8 +483,9 @@ objPts = np.array([
 # pixeles [0,8,0] corresponde a los primeros valores que son u1v1
 # leemos el archivo, nos devuelve una tabla de 24 números por fila, cada fila es un cuadro(la primera corresponde a los 12 puntos de obj_pts)
 #Esto debería funciona en todas las compus
+
 ruta_datos = os.path.join("calib", "3d", "detected_corners.txt")
-datos = np.loadtxt(ruta_datos)
+datos = np.loadtxt(ruta_datos) # aca cada fila es una imagen con 24 columnas(asumo que estan u1v1u2v2..)
 
 
 def imgpts_del_cuadro(k):

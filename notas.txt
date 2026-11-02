@@ -15,6 +15,7 @@ pero creo que no es la solución más prolija. ¿Alguna sugerencia?
 ACLARACIONES
 Antes de entregar es IMPORTANTE limpiar alc.py para que únicamente queden las funciones.
 Ahora las estoy dejando para no borrar lo que van haciendo pero no hay que dejarlo pasar!
+<<<<<<< HEAD
 
 
 OTRAS COSAS
@@ -63,3 +64,5 @@ def devolverMatricesCalibracion3d(M,alfaU_igual_alfaV = False, skew_cero = False
     t = np.array([rt1[3], rt2[3], rt3[3]]) # vector de traslacion
 
     return R, t, K
+=======
+>>>>>>> c93cd6c0f0da7cb5bc1b027b337769587910003f

@@ -612,7 +612,7 @@ ruta_esquinas = os.path.join("calib", "coplanar", "marcadas", "esquinas.csv")
 imagenes = pd.read_csv(ruta_esquinas)
 
 Hlist = []
-for nombre in imagenes["imagen"].unique():
+for nombre in imagenes["imagen"].unique(): #no usé esto porque creo que no está permitido unique... si está modificar el notebook
     d = imagenes[imagenes["imagen"] == nombre].sort_values('punto')
     imgPts = d[["u","v"]].to_numpy() 
     

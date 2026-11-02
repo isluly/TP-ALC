@@ -77,7 +77,7 @@ def aplicarPOSIT(obj_vecs,img_vecs,K,MaxIt=50,atol=1e-4):
     # pasa de pixeles a coordenadas de imagen centradas, xi = ui - cx, yi = vi - cy  fx/fy(escalando los ejes)
     # dejamos ambos ejes en la misma escala con el factor fx/fy, si fx=fy no cambia nada
     m = np.zeros((N,2))
-    for i in range(n):
+    for i in range(N):
         m[i,0] = img[i,0] - cx
         m[i,1] = (img[i,1] - cy) * fx / fy
     M0,m0 = obj[0], m[0]

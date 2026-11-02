@@ -569,8 +569,10 @@ def resolverDLT2D(Q):
     # extender m a 3x4
     return h.reshape(3,3)
 
-def producto_cruz(a,b):
-    return np.array([a[1]*b[2] - a[2]*b[1], - (a[2]*b[0] - a[0]*b[2]), a[0]*b[1] - a[1]*b[0]])
+
+def producto_cruz(a, b):
+    return np.array([a[1]*b[2] - a[2]*b[1],a[2]*b[0] - a[0]*b[2],a[0]*b[1] - a[1]*b[0]])
+
 
 def obtenerPose2D(Hj,K):
     K_inv = matriz_inversa(K)

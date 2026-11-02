@@ -1,9 +1,18 @@
+"""
+TP 2 ÁLGEBRA LINEAL COMPUTACIONAL
+
+GRUPO: Triangulados
+INTEGRANTES: Posse Lucila, Ventroni Milena, Pili, Fran
+
+"""
+
+#%% IMPORTS
+
 import numpy as np
 import pandas as pd
+import os #Resuelvo tema de import de archivos
 
-# MODULO ALC
-
-# funciones del modulo ALC
+#%% Funciones del MODULO ALC
 
 def multiplicacion_matrices(A,B):
     n,k = A.shape
@@ -132,7 +141,6 @@ def calculaLDV(A):
       np.array(D, dtype=float),
       np.array(V, dtype=float),
   )
-  
 
 def esSDP(A, atol=1e-8):
   if A is None:
@@ -190,7 +198,6 @@ def calculaCholesky(A, atol=1e-10):
             
     return R
 
-
 def norma(x,p):
     if p == 'inf':
         maximo = 0
@@ -212,7 +219,6 @@ def transpuesta(A):
             fila.append(A[j,i])
         resp.append(fila)
     return np.array(resp)
-
 
 def metpot2k(A, tol=1e-13, K=10000):
     K = int(K)
@@ -241,7 +247,6 @@ def componente_max(x):
             indice = i
     return indice
 
-
 def producto_interno(x, y):
     n = len(x)
     m = len(y)
@@ -262,7 +267,6 @@ def producto_escalar(v,w):
 
     return res
 
-# reemplazar @ por multiplicacion_matrices
 def diagRH(A, tol=1e-15, K=1e5):
     n = A.shape[0]
     v1, l1, _ = metpot2k(A, tol, K)
@@ -395,7 +399,10 @@ objPts = np.array([
 ])
 # pixeles [0,8,0] corresponde a los primeros valores que son u1v1
 # leemos el archivo, nos devuelve una tabla de 24 números por fila, cada fila es un cuadro(la primera corresponde a los 12 puntos de obj_pts)
-datos = np.loadtxt(r"C:\Users\Admin\Documents\TP1ALC\TP-ALC\calib\3d\detected_corners.txt")
+#Esto debería funciona en todas las compus
+ruta_datos = os.path.join("calib", "3d", "detected_corners.txt")
+datos = np.loadtxt(ruta_datos)
+
 
 def imgpts_del_cuadro(k):
     fila = datos[k]
@@ -521,7 +528,8 @@ for j in range(7): # cant filas(j va de 0 a 6) con borde interno
 objPts = np.array(objPts)
 
 #nos armamos nuestro df con esquinas marcadas
-imagenes = pd.read_csv(r'C:\Users\Admin\Documents\TP1ALC\TP-ALC\calib\coplanar\marcadas\esquinas.csv')
+ruta_esquinas = os.path.join("calib", "coplanar", "marcadas", "esquinas.csv")
+imagenes = pd.read_csv(ruta_esquinas)
 
 Hlist = []
 for nombre in imagenes["imagen"].unique():

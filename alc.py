@@ -600,6 +600,7 @@ def obtenerPose2D(Hj,K):
         
     return R,t  
 
+"""
 # aplicacion al ejercicio
 # objPts del tablero: esquinas(30*i, 30*j), i=0..10, j=0..6
 objPts = []
@@ -633,3 +634,4 @@ poses = []
 for i,H in enumerate(Hlist):
     R,t = obtenerPose2D(H,K)
     poses.append((R,t))
+    """

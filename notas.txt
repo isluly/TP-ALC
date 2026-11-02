@@ -4,3 +4,50 @@ Si hay que ortogonalizar R despues y como(GS?)
 Ej 3, sacar los pixeles a mano 
 Estamos bien encaminados para seguir con la parte de aplicaciones? falta normalizar algo?
 Hay que hacer los ejercicios en papel ademas del 1? NO 
+
+
+version bruta del 2:
+
+def devolverMatricesCalibracion3d(M,alfaU_igual_alfaV = False, skew_cero = False):
+    # quiero M = K [R t] donde K es triangular superior, R es ortogonal
+
+    if (np.shape(M) != (3,4)):
+        print('M no cumple el tamaño de la matriz de proyeccion pedida')
+        return None, None, None
+
+    # restricciones adicionales
+    # hay que ver si con estas restricciones no cambia la ortogonalidad de R
+    if skew_cero:
+        skew = 0.0
+    if alfaU_igual_alfaV:
+        alfaU = alfaV 
+    
+    m1 = M[0,:3] # m1 = (m11,m12,m13)
+    m2 = M[1,:3] # m2 = (m21,m22,m23)
+    m3 = M[2,:3] # m3 = (m31,m32,m33)
+
+    # despejo las ecuaciones para u0, v0, skew, alfau, alfav (planteado en papel/en el note eventualmente...)
+    u0 = producto_escalar(m3,m1)
+    v0 = producto_escalar(m2,m3)
+    alfaV = np.sqrt(producto_escalar(m2,m2) - v0*v0)
+    skew = (producto_escalar(m1,m2) - v0*u0) / alfaV
+    alfaU = np.sqrt(producto_escalar(m1,m1) - skew*skew - u0*u0)
+    
+    
+    # y con esos datos despejo [R t] (rt1, rt2, rt3 sus filas)
+    rt3 = M[2,:] # (r31,r32,r33,t3) = (m31,m32,m33,m34)
+
+    # (m21,m22,m23,m24) = alfaV(rt2) + v0(rt3)
+    # [(m21,m22,m23,m24) - v0(r31,r32,r33,t3)] / alfaV = (r21,r22,r23,t2)
+    rt2 = (M[1,:] - v0*rt3) / alfaV
+
+    # (m11,m12,m13,m14) = alfaU(rt1) + skew(rt2) + u0(rt3)
+    # [(m11,m12,m13,m14) - u0(rt3) - skew(rt2)] / alfaU = rt1
+    rt1 = (M[0,: ] - u0*rt3 - skew*rt2) / alfaU
+
+    # listo tengo todo! armo K [R t]
+    K = np.array([[alfaU, skew, u0], [0, alfaV, v0], [0,0,1]]) # matriz de param intrinsecos
+    R = np.array([rt1[:3], rt2[:3], rt3[:3]]) # matriz de rotacion
+    t = np.array([rt1[3], rt2[3], rt3[3]]) # vector de traslacion
+
+    return R, t, K

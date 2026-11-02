@@ -30,9 +30,25 @@ def multiplicacion_matrices(A,B):
 
 # multiplicacion matriz por vector
 def matvec(A,v):
-    res = np.zeros(A.shape[0])
-    for i in range(A.shape[0]):
-        res[i] = producto_escalar(A[i,:],v)
+    m, n = np.shape(A)
+    if (n != len(v)):
+            print('No se puede')
+            return None
+    res = np.zeros(m)
+    for i in range(m):
+        res[i] = producto_escalar(A[i,:],v) # v * fila i
+    return res
+
+# multiplicacion vector por matriz
+def vecmat(v,A):
+    m, n = np.shape(A)
+    if (len(v) != m):
+        print('No se puede')
+        return None
+
+    res = np.zeros(n)
+    for i in range(n):
+        res[i] = producto_escalar(v,A[:,i]) # v * columna i
     return res
 
 def es_matriz_inversible(A):
@@ -299,6 +315,61 @@ def diagRH(A, tol=1e-15, K=1e5):
         S = multiplicacion_matrices(H, S_blk)
     return S, D
 
+def res_tri(L,b, inferior=True, tol=1e-12):
+    #asumamos que es inferior. tiene esta pinta:
+    # [* 0 0 0]
+    # [* * 0 0]
+    # [* * * 0]
+    # [* * * *] ...etc para nxn
+    n, m = np.shape(L)
+    if n!=m:
+        print('Matriz no cuadrada')
+        return None
+    if len(b) != n:
+       print('no se puede')
+       return None
+
+    x = np.zeros(n)
+    inicio = -1
+    fin = -1
+    paso = 0
+
+    # for (int i = inicio, i {hasta} fin, i += paso)
+    if inferior:
+        inicio = 0
+        fin = n
+        paso = 1
+    else:
+        inicio = n-1
+        fin = -1
+        paso = -1
+    # x0 es facilito
+    if abs(L[inicio][inicio]) > tol: # no hay nada que me diga que esto no es (casi) cero...
+        x[inicio] = b[inicio] / L[inicio][inicio]
+    elif abs(b[inicio]) < tol:
+        x[inicio] = 0 # en realidad tendria variable libre pero bueno
+    else: # Abs!
+        print('0=' + str(b[inicio]) + ' - Abs! Sistema incompatible')
+        return None
+
+    # ahora a partir de eso hago los proximos
+    for i in range(inicio+paso,fin,paso):
+        # calculo lo que ya tengo resuelto
+        bPrima = 0
+        for j in range(inicio,i,paso):
+            bPrima += L[i][j]*x[j]
+
+        # resuelvo la incognita nueva
+        bPrima = b[i] - bPrima
+        if abs(L[i][i]) > tol: # no hay nada que me diga que esto no es (casi) cero...
+            x[i] = bPrima / L[i][i]
+        elif abs(bPrima) < tol:
+            x[i] = 0
+        else: # Abs!
+            print('0=' + str(bPrima) + ' - Abs! Sistema incompatible')
+            return None
+    return x
+
 
 
 # aplicaciones en notebook
@@ -334,49 +405,58 @@ def resolverDLT3D(Q):
     # extender m a 3x4
     return m.reshape(3,4)
 
-def devolverMatricesCalibracion3d(M,alfaU_igual_alfaV = False, skew_cero = False):
+def espejar(A, filas):
+    if (filas):
+        return A[::-1] # equivalente a hacer PA con P la matriz identidad espejada
+    else:
+        return A[:,::-1] # equivalente a hacer AP
+
+def devolverMatricesCalibracion3d(M, restric=None): # restric puede ser None, 'skew', 'alfa', 'skew-alfa' (para pedir las dos cosas)
     # quiero M = K [R t] donde K es triangular superior, R es ortogonal
 
     if (np.shape(M) != (3,4)):
         print('M no cumple el tamaño de la matriz de proyeccion pedida')
         return None, None, None
 
-    # restricciones adicionales
-    # hay que ver si con estas restricciones no cambia la ortogonalidad de R
-    if skew_cero:
-        skew = 0.0
-    if alfaU_igual_alfaV:
-        alfaU = alfaV 
-    
-    m1 = M[0,:3] # m1 = (m11,m12,m13)
-    m2 = M[1,:3] # m2 = (m21,m22,m23)
-    m3 = M[2,:3] # m3 = (m31,m32,m33)
+    if (M[2][3] < 0): # corrijo signo
+        M = -M
 
-    # despejo las ecuaciones para u0, v0, skew, alfau, alfav (planteado en papel/en el note eventualmente...)
-    u0 = producto_escalar(m3,m1)
-    v0 = producto_escalar(m2,m3)
-    alfaV = np.sqrt(producto_escalar(m2,m2) - v0*v0)
-    skew = (producto_escalar(m1,m2) - v0*u0) / alfaV
-    alfaU = np.sqrt(producto_escalar(m1,m1) - skew*skew - u0*u0)
-    
-    
-    # y con esos datos despejo [R t] (rt1, rt2, rt3 sus filas)
-    rt3 = M[2,:] # (r31,r32,r33,t3) = (m31,m32,m33,m34)
+    Mprima = M[:,:3]
+    MprimaT = transpuesta(Mprima)
+    P = np.array([[0,0,1],[0,1,0],[1,0,0]])
 
-    # (m21,m22,m23,m24) = alfaV(rt2) + v0(rt3)
-    # [(m21,m22,m23,m24) - v0(r31,r32,r33,t3)] / alfaV = (r21,r22,r23,t2)
-    rt2 = (M[1,:] - v0*rt3) / alfaV
+    Q, R = QR_con_GS(multiplicacion_matrices(MprimaT,P)) # QR sobre M't P
 
-    # (m11,m12,m13,m14) = alfaU(rt1) + skew(rt2) + u0(rt3)
-    # [(m11,m12,m13,m14) - u0(rt3) - skew(rt2)] / alfaU = rt1
-    rt1 = (M[0,: ] - u0*rt3 - skew*rt2) / alfaU
+    # K = P Rt P (espejando me ahorro las multiplicaciones de matrices, total ya se como permuta multiplicar por P)
+    Kres = espejar(espejar(transpuesta(R), True), False).copy()
+    # R = P Qt
+    Rres = espejar(transpuesta(Q),True).copy()
 
-    # listo tengo todo! armo K [R t]
-    K = np.array([[alfaU, skew, u0], [0, alfaV, v0], [0,0,1]]) # matriz de param intrinsecos
-    R = np.array([rt1[:3], rt2[:3], rt3[:3]]) # matriz de rotacion
-    t = np.array([rt1[3], rt2[3], rt3[3]]) # vector de traslacion
+    if restric is not None:
+        if restric in ('skew', 'skew-alfa'): # pido skew = 0
+            Kres[0][1] = 0.0
+        if restric in ('alfa', 'skew-alfa'): # pido alfau=alfav (saco un promedio entre los dos para no tener que elegir uno u otro)
+            Kres[0][0] = (Kres[0][0] + Kres[1][1]) / 2
+            Kres[1][1] = Kres[0][0]
 
-    return R, t, K
+        # calculo R con este nuevo K para garantizar K R = Mprima
+        Rres = np.zeros((3, 3))
+        for j in range(3):
+            Rres[:, j] = res_tri(Kres, Mprima[:, j], inferior=False)
+
+        # ortonormalizo R para cumplir enunciado. notar que con esto K R aproxima Mprima, no es exacto
+        r3 = Rres[2] / norma(Rres[2], 2)
+        r2 = Rres[1] - producto_escalar(Rres[1], r3)*r3
+        r2 = r2 / norma(r2, 2)
+        r1 = Rres[0] - producto_escalar(Rres[0], r3)*r3 - producto_escalar(Rres[0], r2)*r2
+        r1 = r1 / norma(r1, 2)
+        Rres = np.array([r1, r2, r3])
+
+
+    # resuelvo K t = {columna 4 de M} para conseguir t
+    t = res_tri(Kres, M[:,3], inferior=False)
+
+    return Rres, t, Kres
 
 
 # aplicacion a datos que nos dieron, ej 2

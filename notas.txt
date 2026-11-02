@@ -71,3 +71,11 @@ def devolverMatricesCalibracion3d(M,alfaU_igual_alfaV = False, skew_cero = False
     t = np.array([rt1[3], rt2[3], rt3[3]]) # vector de traslacion
 
     return R, t, K
+
+    ACLARACIONES DE LA NOTEBOOK
+    
+    si cambian cosas del código creen un bloque de python y corran
+    import importlib
+    importlib.reload(alc)
+
+    para que les cargue bien en la nb

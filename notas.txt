@@ -7,20 +7,33 @@ Ej 3, sacar los pixeles a mano
 Estamos bien encaminados para seguir con la parte de aplicaciones? falta normalizar algo?
 Hay que hacer los ejercicios en papel ademas del 1? NO 
 
-NO CONSULTADAS
 1. en el ejercicio 3a (implementación en el .py) usamos .unique() para distinguir las imágenes, no vale esto no?
 en la notebook lo cambiamos recorriendo toda la carpeta y poniendo un if que ignora el csv 
 pero creo que no es la solución más prolija. ¿Alguna sugerencia?  
+    - RTA: dejemos lo que tiene el note, es solo para mostrar
 2. en la notebook los items de las consignas que pasaron no siempre coinciden con los del enunciado del tp
 (ver ejercicio 3) respetamos las consignas tal cual están escritas en el enunciado o en la notebook? La resolución
 es técnicamente la misma, es una pregunta puramente de presentación. 
 2 bis. En el enunciado del ejercicio 3 el item 1 pide que rango tiene que tener una matriz Q de 2n x 9 para asegurar solución única
 (salvo escala) de H, esto no está en la notebook se agrega, se ignora? sale fácil con rango-nulidad pero bueno idk
+    RTA: en el enunciado dice que hay que tomar como verdad el enunciado
 3. En el enunciado del ejercicio2 del notebook pide calcular con los parametros opcionales como un O sin embargo en el enunciado dice y/O
 tenemos que calular con ambos a la vez?? es un error de enuciado??
+    RTA: na
 4. ejercicio 5a: esta bien tomar los que tienen Z=0,1 para llegar al minimo de puntos que necesita zhang?
+    RTA: todo bien xq es una aproximacion muy chiquita
 5. ejercicio 5b: hay que tomar la misma K del inciso anterior o calcularla otra vez con los 51 pts? esta muy mal 
     si algunas de las proyecciones nos dieron muy mal? como lo arreglamos? el K del 5a dio muy raro...
+    RTA: a lo suuuuuumo distancia de 15px. hay que revisar la funcion que genera K (y si con eso no funca revisar la de R t)
+
+
+PENDIENTES
+- ver por que se rompio el 3a en el notebook agregando las 10 imgs faltantes... (se rompio Q con las nuevas xq da shape (0,9))
+- marcar los puntos taxi/señora del 5c + hacer el analisis grafico con matplot
+- hacer labo SDV para reemplazar diagRH (REVISAR DIAGRH PORQUE CAPAZ ESTA MAL)
+- pasar en limpio alc.py
+IMPORTANTE: hay que hacer el labo SDV y usar eso en vez de diagRH. es raro nunca haber usado la V...
+
 
 
 ACLARACIONES

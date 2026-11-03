@@ -55,16 +55,16 @@ for i in range(0,51):
 # ejercicio 5c) - analizar drive de 46 imagenes donde mis puntos son la señora y el taxi en cada img
 
 # PENDIENTE conseguir los pts de las img. tanto taxi como senora estan en Z=0 asi que todo bien
-senora2D = np.array([[3,4,1], [3,4,1], [3,4,1]]) # [u,v,1]
-taxi2D = np.array([[3,4,1], [3,4,1], [3,4,1]])
+# senora2D = np.array([[3,4,1], [3,4,1], [3,4,1]]) # [u,v,1]
+# taxi2D = np.array([[3,4,1], [3,4,1], [3,4,1]])
 
-cantImg = 46
-senora3D = np.zeros((cantImg,4))
-taxi3D = np.zeros((cantImg,4))
+# cantImg = 46
+# senora3D = np.zeros((cantImg,4))
+# taxi3D = np.zeros((cantImg,4))
 
-KRt_inv = alc.matriz_inversa(KRt)
-for i in range(0,cantImg):
-    senora2D[i] = alc.vecmat(senora3D[i],KRt_inv)
-    taxi2D[i] = alc.vecmat(taxi3D[i],KRt_inv)
+# KRt_inv = alc.matriz_inversa(KRt)
+# for i in range(0,cantImg):
+#     senora2D[i] = alc.vecmat(senora3D[i],KRt_inv)
+#     taxi2D[i] = alc.vecmat(taxi3D[i],KRt_inv)
 
 # PENDIENTE graficar y analizar para el note

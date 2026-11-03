@@ -27,9 +27,9 @@ def imagen_a_cancha(H,uv): #uv son los puntos(N,2) en pixeles
 
 # gol enzo, tomando el arco de la izquierda(calculados a partir de las medidas que nos dieron de la cancha)
 objPts = np.array([[0,24.84],[0,43.16],[5.5,24.84],[5.5,43.16],[16.5,26.69],[16.5,41.31],[20.15,34]])
-# calcularlos de mi imagen, ahora pongo unos que me dio claude pero no son los reales
-imgPts = np.array([[193,172],[840,190],[157,233],[868,251],
-                   [147,407],[855,424],[500,490]], dtype=float)
+# ya calculados 
+imgPts = np.array([[191,171],[843,189],[153,231],[867,251],
+                   [144,405],[853,422],[506,488]], dtype=float)
 
 Q = obtenerQ2d(imgPts,objPts)
 H = resolverDLT2D(Q)
@@ -39,15 +39,15 @@ rep = cancha_a_imagen(H, objPts)
 print(np.abs(rep - imgPts).max())
 
 # distancia de enzo a la linea de gol
-pie_e = np.array([[800,543]]) # aca van los pixeles que me de el pie de enzo
+pie_e = np.array([[808,541]]) # aca van los pixeles que me de el pie de enzo
 UV = imagen_a_cancha(H,pie_e)
 print("enzo en cancha :", UV, " distancia en metros a la linea de gol: ",UV[0][0])
 
 # circulos de 1m
-ruta_img = os.path.join("futbol", "test-gol-enzo.png") # reemplazar por imagen con puntos marcados en los pies y en los arcos?
+ruta_img = os.path.join("futbol", "test-gol-enzo-marcada.png") # reemplazar por imagen con puntos marcados en los pies y en los arcos?
 img = plt.imread(ruta_img)
 plt.imshow(img)
-pies_arg = np.array([[800,543],[105,538], [248,405],[373,325],[845,352]], dtype=float) # aca van los pixeles de los pies de cada jug arg
+pies_arg = np.array([[808,541],[108,538], [245,398],[375,327],[852,352],[391,293]], dtype=float) # aca van los pixeles de los pies de cada jug arg
 t = np.linspace(0, 2*np.pi, 100)
 for UV0 in imagen_a_cancha(H,pies_arg):
     circ = np.zeros((100,2))
@@ -62,7 +62,7 @@ plt.show()
 # arco de la derecha
 objPts2 = np.array([[88.5,13.84],[88.5,54.16],[99.5,24.84],[99.5,43.16],[105,43.16],[105,68]], dtype=float)
 # algunos que me tiro claude, hay que calcularlos de la imagen y reemplazar
-imgPts2 = np.array([[735, 757],[735, 318],[1368, 577],[1230, 390],[1470, 388],[1305, 237]], dtype=float)
+imgPts2 = np.array([[732, 758],[733, 315],[1364, 577],[1228, 389],[1385, 309],[1304, 235]], dtype=float)
 
 H2 = resolverDLT2D(obtenerQ2d(imgPts2,objPts2))
 rep2 = cancha_a_imagen(H2,objPts2)
@@ -70,7 +70,7 @@ rep2 = cancha_a_imagen(H2,objPts2)
 print("error reproyección offside:", np.abs(rep2 - imgPts2).max())   # debería ser pocos px
 
 # reemplazar por los pixeles reales de la imagen
-defensores = np.array([[824,330], [790,565]], dtype=float)
+defensores = np.array([[826,325], [816,559]], dtype=float)
 UV_def = imagen_a_cancha(H2,defensores)
 print("defensores en cancha:", UV_def)
 
@@ -92,7 +92,7 @@ for k in range(50):
 r = cancha_a_imagen(H2,recta)
 
 # atacantes, los ingleses, calcular los pixeles
-atacantes = np.array([[700,380],[720,420]],dtype=float)
+atacantes = np.array([[873,592],[838,528],[862,505],[845,412]],dtype=float)
 UV_at = imagen_a_cancha(H2,atacantes)
 for i in range(len(UV_at)):
     if UV_at[i][0] > U1:
@@ -101,7 +101,7 @@ for i in range(len(UV_at)):
         estado = "habilitado"
     print("atacante",i,"en_cancha:",UV_at[i],"estado:",estado)
 
-ruta_img2 = os.path.join("futbol","test-fuera-de-juego.png") # reemplazar por la de los puntos marcados
+ruta_img2 = os.path.join("futbol","test-fuera-de-juego-marcada.png") # reemplazar por la de los puntos marcados
 img2 = plt.imread(ruta_img2)
 plt.imshow(img2)
 plt.plot(r[:,0],r[:,1],'c')

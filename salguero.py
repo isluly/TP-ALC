@@ -21,7 +21,7 @@ for j in range(0,4):
     print(Hs[j])
 
 A = alc.armarA(Hs)
-K = alc.calcularMatrizK2D(A, 'skew') # consegui K!!
+K = alc.calcularMatrizK2D(A) # consegui K!!
 print('parametros intrinsecos:')
 print(K)
 
@@ -50,3 +50,21 @@ for i in range(0,51):
     dist = np.sqrt(abs(proy[0] - ptsVistaCero[4, i])**2 + abs(proy[1] - ptsVistaCero[5, i])**2)
     print('proyecto a '+ str(reproyeccion[:,i]) + ' --- og: ' + str(ptsVistaCero[4:, i]) + ' --- dist: ' + str(dist))
 
+# PENDIENTE debuggear y/o analizar por que da tan mal K
+
+# ejercicio 5c) - analizar drive de 46 imagenes donde mis puntos son la señora y el taxi en cada img
+
+# PENDIENTE conseguir los pts de las img. tanto taxi como senora estan en Z=0 asi que todo bien
+senora2D = np.array([[3,4,1], [3,4,1], [3,4,1]]) # [u,v,1]
+taxi2D = np.array([[3,4,1], [3,4,1], [3,4,1]])
+
+cantImg = 46
+senora3D = np.zeros((cantImg,4))
+taxi3D = np.zeros((cantImg,4))
+
+KRt_inv = alc.matriz_inversa(KRt)
+for i in range(0,cantImg):
+    senora2D[i] = alc.vecmat(senora3D[i],KRt_inv)
+    taxi2D[i] = alc.vecmat(taxi3D[i],KRt_inv)
+
+# PENDIENTE graficar y analizar para el note

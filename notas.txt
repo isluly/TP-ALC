@@ -17,15 +17,33 @@ es técnicamente la misma, es una pregunta puramente de presentación.
 2 bis. En el enunciado del ejercicio 3 el item 1 pide que rango tiene que tener una matriz Q de 2n x 9 para asegurar solución única
 (salvo escala) de H, esto no está en la notebook se agrega, se ignora? sale fácil con rango-nulidad pero bueno idk
 3. En el enunciado del ejercicio2 del notebook pide calcular con los parametros opcionales como un O sin embargo en el enunciado dice y/O
-tenemos que calular con ambos a la vez?? es un error de enuciado?? 
+tenemos que calular con ambos a la vez?? es un error de enuciado??
+4. ejercicio 5a: esta bien tomar los que tienen Z=0,1 para llegar al minimo de puntos que necesita zhang?
+5. ejercicio 5b: hay que tomar la misma K del inciso anterior o calcularla otra vez con los 51 pts? esta muy mal 
+    si algunas de las proyecciones nos dieron muy mal? como lo arreglamos? el K del 5a dio muy raro...
 
 
 ACLARACIONES
 Antes de entregar es IMPORTANTE limpiar alc.py para que únicamente queden las funciones.
 Ahora las estoy dejando para no borrar lo que van haciendo pero no hay que dejarlo pasar!
 
+ACLARACIONES DE LA NOTEBOOK
+
+si cambian cosas del código creen un bloque de python y corran
+import importlib
+importlib.reload(alc)
+
+para que les cargue bien en la nb
+
 
 OTRAS COSAS
+para la pasada en limpio: cambiar funciones propias por las permitidas:
+    transpuesta por .T
+    ...
+
+
+
+
 version bruta del 2:
 
 def devolverMatricesCalibracion3d(M,alfaU_igual_alfaV = False, skew_cero = False):
@@ -71,11 +89,3 @@ def devolverMatricesCalibracion3d(M,alfaU_igual_alfaV = False, skew_cero = False
     t = np.array([rt1[3], rt2[3], rt3[3]]) # vector de traslacion
 
     return R, t, K
-
-    ACLARACIONES DE LA NOTEBOOK
-    
-    si cambian cosas del código creen un bloque de python y corran
-    import importlib
-    importlib.reload(alc)
-
-    para que les cargue bien en la nb

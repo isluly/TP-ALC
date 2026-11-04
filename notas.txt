@@ -29,6 +29,8 @@ tenemos que calular con ambos a la vez?? es un error de enuciado??
 
 PENDIENTES
 - ver por que se rompio el 3a en el notebook agregando las 10 imgs faltantes... (se rompio Q con las nuevas xq da shape (0,9))
+  (Fran: Entiendo que el error era que K volvía None, esto es porque al marcar las 10 imágenes nuevas no
+   se actualizó esquinas.csv y se falopeaba)
 - marcar los puntos taxi/señora del 5c + hacer el analisis grafico con matplot
 - hacer labo SDV para reemplazar diagRH (REVISAR DIAGRH PORQUE CAPAZ ESTA MAL)
 - pasar en limpio alc.py

@@ -604,6 +604,56 @@ def obtenerPose2D(Hj,K):
         
     return R,t  
 
+def svd_reducida(A, k="max", tol=1e-15):
+    """
+    A la matriz de interes (de m x n)
+    k el numero de valores singulares (y vectores) a retener.
+    tol la tolerancia para considerar un valor singular igual a cero
+    Retorna U_red (matriz de m x k), valores_sing (vector de k valores singulares) y V_red (matriz de n x k)
+    """
+    A = np.array(A, dtype=float)
+    m, n = A.shape
+
+    # si m < n trabajamos con A^t
+    traspuesta = m < n
+    if traspuesta:
+        A = transpuesta(A)
+        m, n = n, m
+
+    # autovectores de A^t A = columnas de V, autovalores = valores singulares al cuadrado
+    AtA = multiplicacion_matrices(transpuesta(A), A)
+    if n == 1:
+        S, D = np.ones((1, 1)), AtA          # diagRH no contempla el caso 1x1
+    else:
+        S, D = diagRH(AtA)
+    autovalores = [D[i, i] for i in range(n)]
+
+    # diagRH devuelve primero los autovalores no nulos, de mayor a menor
+    # Los asserts fallan si no se cumple
+    r = len([a for a in autovalores if a > tol])
+    assert all(a > tol for a in autovalores[:r]), "diagRH no devolvio primero los autovalores no nulos"
+    assert all(autovalores[i] >= autovalores[i + 1] * (1 - 1e-10) for i in range(r - 1)), \
+        "diagRH no devolvio los autovalores ordenados"
+
+    # nos quedamos con los primeros k autovalores no nulos 
+    cant = r if k == "max" else min(k, r)
+
+    valores_sing = np.zeros(cant)
+    V_red = np.zeros((n, cant))
+    for j in range(cant):
+        valores_sing[j] = np.sqrt(autovalores[j])
+        V_red[:, j] = S[:, j]
+
+    # A V = U Sigma: U_red se obtiene normalizando las columnas de A V_red
+    AV = multiplicacion_matrices(A, V_red)
+    U_red = np.zeros((m, cant))
+    for j in range(cant):
+        U_red[:, j] = AV[:, j] / norma(AV[:, j], 2)
+
+    if traspuesta:
+        return V_red, valores_sing, U_red
+    return U_red, valores_sing, V_red
+
 """
 # aplicacion al ejercicio
 # objPts del tablero: esquinas(30*i, 30*j), i=0..10, j=0..6

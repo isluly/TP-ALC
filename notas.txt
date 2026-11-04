@@ -32,7 +32,11 @@ PENDIENTES
   (Fran: Entiendo que el error era que K volvía None, esto es porque al marcar las 10 imágenes nuevas no
    se actualizó esquinas.csv y se falopeaba)
 - marcar los puntos taxi/señora del 5c + hacer el analisis grafico con matplot
+  (Fran: marcados con el script "marcar_salguero.py", acá no hay magia, toca hacerlo a mano pero es menos laborioso de lo que suena con el script :-).
+  Solo usé 16 del total, o sea un tercio, porque si no me corcheaba, debería
+  servir si no se ponen pesados.)
 - hacer labo SDV para reemplazar diagRH (REVISAR DIAGRH PORQUE CAPAZ ESTA MAL)
+ (Fran: hecho SVD, la pregunta es dónde lo usamos)
 - pasar en limpio alc.py
 IMPORTANTE: hay que hacer el labo SDV y usar eso en vez de diagRH. es raro nunca haber usado la V...
 

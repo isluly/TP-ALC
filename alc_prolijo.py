@@ -487,7 +487,7 @@ def svd_reducida(A, k="max", tol=1e-15):
     return U_red, valores_sing, V_red
 
 
-#%% Ejercicio 2 - Calibración con objeto 3D
+#%% Funciones ejercicio 2 - Calibración con objeto 3D
 
 def obtenerQ3d(imgPts, objPts):
     """
@@ -594,30 +594,6 @@ def devolverMatricesCalibracion3d(M, restric=None):
     return Rres, t, Kres
 
 
-# --- Aplicación a los datos del ejercicio 2 ---
-
-# Puntos del mundo real (U, V, W), ¿en cm? -> matriz de 12 x 3
-objPts = np.array([
-    [0, 8, 0],
-    [10.4, 8, 0],
-    [0, 21.5, 0],
-    [10.4, 21.5, 0],
-    [0, 26.6, -10.95],
-    [10.4, 26.6, -10.95],
-    [0, 26.6, -24.45],
-    [10.4, 26.6, -24.45],
-    [19.4, 14.6, -10.95],
-    [19.4, 14.6, -24.45],
-    [19.4, 25, -10.95],
-    [19.4, 25, -24.45]
-])
-
-# Cada fila del archivo es un cuadro con 24 números: u1 v1 u2 v2 ... u12 v12,
-# en el mismo orden que objPts (u1 v1 <-> [0, 8, 0], etc.).
-ruta_datos = os.path.join("calib", "3d", "detected_corners.txt")
-datos = np.loadtxt(ruta_datos)
-
-
 def imgpts_del_cuadro(k):
     """Devuelve los 12 puntos (u, v) del cuadro k como matriz de 12 x 2."""
     fila = datos[k]
@@ -627,14 +603,7 @@ def imgpts_del_cuadro(k):
         imgPts[i, 1] = fila[2*i + 1]  # v_i
     return imgPts
 
-
-imgPts = imgpts_del_cuadro(0)
-Q = obtenerQ3d(imgPts, objPts)
-M = resolverDLT3D(Q)
-R, T, K = devolverMatricesCalibracion3d(M)
-
-
-#%% Ejercicio 3 - Calibración con patrón plano
+#%% Funciones ejercicio 3 - Calibración con patrón plano
 
 def obtenerQ2d(imgPts, objPts):
     """
@@ -751,42 +720,225 @@ def obtenerPose2D(Hj, K):
 
     return R, t
 
+#%% Funciones ejercicio 4 - Futbol
 
-"""
-# --- Aplicación a los datos del ejercicio 3 ---
+def cancha_a_imagen(H,UV): 
+    # H es la homografia que lleva de la cancha a la imagen
+    # UV son los puntos (N,2) en metros:
+    N = len(UV)
+    res = np.zeros((N,2))
+    for i in range(N):
+        p = matvec(H,np.array([UV[i][0], UV[i][1], 1.0]))
+        res[i][0] = p[0] / p[2]
+        res[i][1] = p[1] / p[2]
+    return res
 
-# objPts del tablero: esquinas (30*i, 30*j), i = 0..10, j = 0..6
-objPts = []
-for j in range(7):       # filas (esquinas internas)
-    for i in range(11):  # columnas
-        objPts.append([30.0*i, 30.0*j, 0.0])
+def imagen_a_cancha(H,uv): #uv son los puntos(N,2) en pixeles
 
-objPts = np.array(objPts)
+    Hinv = matriz_inversa(H)
+    N = len(uv)
+    res = np.zeros((N,2))
+    for i in range(N):
+        p = matvec(Hinv,np.array([uv[i][0],uv[i][1],1]))
+        res[i][0] = p[0] / p[2]
+        res[i][1] = p[1] / p[2]
+    return res
 
-# DataFrame con las esquinas marcadas
-ruta_esquinas = os.path.join("calib", "coplanar", "marcadas", "esquinas.csv")
-imagenes = pd.read_csv(ruta_esquinas)
 
-# una homografía por imagen
-# (en el notebook no usamos unique porque creo que no está permitido; si está, modificarlo)
-Hlist = []
-for nombre in imagenes["imagen"].unique():
-    d = imagenes[imagenes["imagen"] == nombre].sort_values('punto')
-    imgPts = d[["u", "v"]].to_numpy()
+#%% Funciones ejercicio 6 -Dron
 
-    Q = obtenerQ2d(imgPts, objPts)
-    H = resolverDLT2D(Q)
-    Hlist.append(H)
+# sale de las ecuaciones 16 y 17 de la parte teorica(pag 19)
+# Parámetros: I0,J0 son soluciones particulares del paso POS coplanar.
+# Devuelve: una pareja lambda,mu que satisface las ecuaciones (16) y (17).
+def calculoLambdaMu(I0,J0):
+    re = producto_escalar(J0,J0) - producto_escalar(I0,I0)
+    im = -2 * producto_escalar(I0,J0)
+    C = complex(re, im) ** 0.5  # raíz cuadrada compleja sin importar cmath (no permitido en la entrega)
+    return C.real, C.imag   # la otra solucion es -lambda, -mu; se prueba en aplicarPOSIT
 
-# A con todas las homografías
-A = armarA(Hlist)
+# toma una solucion candidata Is y Js y la convierte en una pose completa 
+# Parámetros: Is,Js son una solución candidata; fx es la focal común,
+# m0 el píxel centrado del punto de referencia y M0 su posición 3D.
+# Devuelve: los tres ejes, Z0, la rotación R y la traslación t.
+def calcularSalidaPOSIT(Is,Js,fx,m0,M0):
+    nI,nJ = norma(Is,2), norma(Js,2)
+    if nI == 0 or nJ == 0:
+        return None  # no se puede normalizar una solución nula
+    Z0 = 2 * fx / (nI + nJ) # usa la igualdad ||I|| = ||J|| de la teoria: Z0 = f/||I|| = f/||J||
+    i = Is / nI # normaliza para obetener los dos ejes de la camara, vectores unitarios
+    j = Js / nJ
+    k = producto_cruz(i,j) # sacamos el valor de k por producto cruz(tercer eje, perpendicular a los otros dos)
+    R = np.array([i,j,k]) # filas i,j,k
+    T = Z0 / fx * np.array([m0[0], m0[1],fx]) # T=OM0, posicion de M0 vista desde la camara. Sale de que M0 esta sobre el rayo que pasa por m0 a profundidad Z0
+    t = T - (matvec(R,M0)) # pasa esa traslacion al origen. t es la posicion del origen del sistema H, en coordenadas de camara, si M0 es (0,0,0) entonces T=t
+    return i,j,k,Z0,R,t
 
-# matriz de parámetros intrínsecos K
-K = calcularMatrizK2D(A)
+# mide que tan buena es una pose
+# devuelve cantidad de proyecciones validas de obj_vecs y el RMS obtenido con respectco a las pos originales en img_vect
+# cuantos puntos estaban adelante de la camara y el error promedio en pixeles(un RMS chico implica una pose buena)
 
-# pose (R, t) de cada imagen del tablero
-poses = []
-for i, H in enumerate(Hlist):
-    R, t = obtenerPose2D(H, K)
-    poses.append((R, t))
-"""
+# Parámetros: R,t definen la pose; obj_vecs/img_vecs son correspondencias;
+# K es la matriz de parámetros intrínsecos.
+# Devuelve: cantidad de puntos delante de cámara y RMS de reproyección.
+def evaluarPose(R, t, obj_vecs, img_vecs, K):
+
+    validas = 0 # cuenta cuantos puntos quedan adelante de la camara
+    suma = 0.0  # va acumulando los errores
+
+    # convertimos t en un vector de dimensión (3,) para poder sumarla a R*M
+    t = np.array(t, dtype=float).reshape(3)
+
+    # recorre los puntos de a pares, M = [U,V,W] y m es su pixel medido(u,v). Se corresponde el primero con el primero y el segundo con el segundo....
+    for M, m in zip(obj_vecs, img_vecs):
+        # redimensiono
+        M = np.array(M, dtype=float).reshape(3)
+
+        # Punto de la camara = R*M + t(donde esta ese punto visto desde la camara)
+        Pc = matvec(R, M) + t
+
+        # si el punto está atras de la cámara
+        if Pc[2] <= 0:
+            continue
+
+        # proyeccion p = K*Pc y despues se divide por la tercera componente, x = fx/Z(se divide por la profundidad por efecto de cuanto mas lejos esta el objeto mas chico se ve en la camara)
+        p = matvec(K, Pc)
+        u = p[0] / p[2]
+        v = p[1] / p[2]
+
+        # compara lo predicho(pixeles) con lo medido m[0] y m[1] y suma el cuadrado de la distancia
+        suma += (u - m[0])**2 + (v - m[1])**2
+
+        # cuenta el punto como valido
+        validas += 1
+
+    # raiz del promedio de los errores al cuadrado
+    rms = np.sqrt(suma / validas) if validas > 0 else None # devuelve None si no hay puntos válidos
+
+    return validas, rms
+
+    
+# resuelve Ax=b con cuadrados minimos, AtA.x = At.b --> x = (AtA) a la menos 1 . At . b
+# A tiene que estar ampliada con n si es coplanar, AtA es singular en ese caso
+# se usa para resolver luego los sistemas
+# Parámetros: A es la matriz del sistema lineal y b su lado derecho.
+# Devuelve: solución de mínimos cuadrados, o None si AtA no es invertible.
+def resolver(A,b):
+    AtA = multiplicacion_matrices(transpuesta(A), A)
+    inv = matriz_inversa(AtA)
+    if inv is None:
+        return None  # el sistema no pudo resolverse con la inversa implementada
+    Atb = matvec(transpuesta(A),b)
+    # devuelve x
+    return matvec(inv,Atb)
+
+
+# Parámetros: puntos 3D/2D, intrínsecos K, máximo de iteraciones y tolerancia RMS.
+# Devuelve: (R,t) de la mejor pose factible o None si no se encuentra una.
+def aplicarPOSIT(obj_vecs, img_vecs, K, MaxIt=50, atol=1e-4):
+
+    obj = np.array(obj_vecs, dtype=float)
+    img = np.array(img_vecs, dtype=float)
+    K = np.array(K, dtype=float)
+    fx,fy,cx,cy = K[0,0],K[1,1],K[0,2],K[1,2]
+    N = len(obj)
+    # Se necesitan al menos 4 puntos, las correspondencias deben coincidir
+    # y los parametros focales no pueden ser cero.
+    if N < 4 or len(img) != N or obj.shape != (N, 3) or img.shape != (N, 2):
+        return None
+    if K.shape != (3, 3) or fx == 0 or fy == 0:
+        return None
+
+    # pasa de pixeles a coordenadas de imagen centradas, xi = ui - cx, yi = vi - cy  fx/fy(escalando los ejes)
+    # dejamos ambos ejes en la misma escala con el factor fx/fy, si fx=fy no cambia nada
+    m = np.zeros((N,2))
+    for i in range(N):
+        m[i,0] = img[i,0] - cx
+        m[i,1] = (img[i,1] - cy) * fx / fy
+    M0,m0 = obj[0], m[0]
+
+    A = obj[1:] - M0
+    # normal unitaria al plano, prodcto cruz, se elige el de mayor norma entre pares de filas, bien condicionado
+    n,mejor_norma = None, 0.0
+    for a in range(len(A)):
+        for b in range(a + 1, len(A)):
+            c = producto_cruz(A[a],A[b])
+            nc = norma(c,2)
+            if nc > mejor_norma:
+                n,mejor_norma = np.array(c,dtype=float),nc
+
+    # verificamos que sea posible calcular una normal al plano
+    if mejor_norma == 0:
+        return None
+
+    # vector unitario
+    n = n / mejor_norma
+
+    # como los puntos son coplanares, AtA es singular, entonces se le agrega n.I0 = 0
+    A_ampliada = np.zeros((N,3))
+    for i in range(N-1):
+        A_ampliada[i] = A[i]
+    A_ampliada[N-1] = n
+
+    eps = np.zeros(N-1)
+    mejor = None
+    rms_prev = None
+
+    for iteracion in range(MaxIt):
+        # lado derecho: x_i(1 + eps_i) - x0
+        xp = m[1:,0] * (1 + eps) - m0[0]
+        yp = m[1:,1] * (1 + eps) - m0[1]
+
+        # ampliado con el 0 de la ecuacion
+        bx = np.zeros(N)
+        by = np.zeros(N)
+        bx[:N-1] = xp
+        by[:N-1] = yp
+
+        I0_aux = resolver(A_ampliada,bx)
+        J0_aux = resolver(A_ampliada,by)
+        if I0_aux is None or J0_aux is None:
+            break
+        I0 = np.array(I0_aux,dtype=float).reshape(3)
+        J0 = np.array(J0_aux,dtype=float).reshape(3)
+
+        lam,mu = calculoLambdaMu(I0,J0)
+
+        # dos soluciones
+        mejor_it = None
+        for s in (1,-1):
+            Is = I0 + s * lam * n
+            Js = J0 + s * mu * n
+            salida = calcularSalidaPOSIT(Is,Js,fx,m0,M0)
+            if salida is None:
+                continue
+            i,j,k,Z0,R,t = salida
+            validas,rms = evaluarPose(R,t,obj,img,K)
+
+            if validas == N and rms is not None: #aca se descartan poses con puntos atras de la camara
+                if mejor_it is None or rms < mejor_it[0]:
+                    mejor_it = (rms,R,np.array(t,dtype=float).reshape(3),k,Z0)
+
+        if mejor_it is None:
+            break
+
+        rms,R,t,k,Z0 = mejor_it
+
+        if mejor is None or rms < mejor[0]:
+            mejor = (rms,R,t)
+
+        # convergencia : no mejora el rms entre iteraciones
+        if rms_prev is not None and rms_prev - rms < atol:
+            break
+
+        rms_prev = rms
+
+        # actualizar eps con la solucion elegida
+        e = np.array(matvec(A,k), dtype=float).reshape(N-1)
+        for i in range(N-1):
+            eps[i] = e[i] / Z0
+
+    if mejor is None:
+        return None
+
+    return mejor[1],mejor[2]
+

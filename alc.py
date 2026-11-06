@@ -373,27 +373,31 @@ def calculaCholesky(A, atol=1e-10):
 
 #%% Módulo ALC - Autovalores y SVD
 
-def metpot2k(A, tol=1e-13, K=10000):
+
+def metpot2k(A, tol=1e-13, K=10000): 
     """
-    Método de la potencia. Devuelve (autovector, autovalor dominante, iteraciones).
-    En cada paso normaliza por la componente de mayor módulo.
+        Método de la potencia. Devuelve (autovector, autovalor dominante, iteraciones).
+        En cada iteración aplica A dos veces(v <- A(Av)) y normaliza con norma 2. Itera hasta que el vector deja de cambiar de dirección o hasta llegar a k iteraciones
     """
-    K = int(K)
-    n = A.shape[0]
-    v = np.random.rand(n)
-    v = v / norma(v, 2)
-    L = 0
-    for k in range(K):
-        w = matvec(A, v)
-        indice = componente_max(w)
-        L = w[indice]
-        if L == 0:
-            return v, 0.0, k
-        v_nuevo = w / L
-        if norma(v_nuevo - v, 2) < tol:
-            return v_nuevo, L, k + 1
-        v = v_nuevo
-    return v, L, K
+    K = int(K) 
+    n = A.shape[0] 
+    v = np.random.rand(n) 
+    v = v / norma(v, 2) 
+    
+    # primera iteracion: dos multiplicaciones
+    w = matvec(A,matvec(A,v)) 
+    v_nuevo = w / norma(w,2) 
+    e = producto_escalar(v_nuevo, v) 
+    k = 1
+     
+    while np.abs(e - 1) > tol and k < K: 
+        v = v_nuevo 
+        w = matvec(A,matvec(A,v)) 
+        v_nuevo = w / norma(w,2) 
+        e = producto_escalar(v_nuevo,v) 
+        k += 1 
+    lam = producto_escalar(v_nuevo, matvec(A,v_nuevo)) 
+    return v,lam,K
 
 
 def diagRH(A, tol=1e-15, K=1e5):
@@ -418,10 +422,10 @@ def diagRH(A, tol=1e-15, K=1e5):
 
     if n == 2:
         S = H
-        D = multiplicacion_matrices(multiplicacion_matrices(H, A), H.T)
+        D = multiplicacion_matrices(multiplicacion_matrices(H, A), transpuesta(H))
     else:
         # H A H^T tiene l1 en la esquina; seguimos con el bloque restante
-        B = multiplicacion_matrices(multiplicacion_matrices(H, A), H.T)
+        B = multiplicacion_matrices(multiplicacion_matrices(H, A), transpuesta(H))
         A_tilde = B[1:, 1:]
         S_tilde, D_tilde = diagRH(A_tilde, tol, K)
 

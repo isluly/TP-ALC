@@ -744,6 +744,24 @@ def imagen_a_cancha(H,uv): #uv son los puntos(N,2) en pixeles
         res[i][1] = p[1] / p[2]
     return res
 
+#%% Funciones ejercicio 5 - Salguero
+
+def calleAImagen(H, X, Y):
+    '''
+    Proyecta un punto de la calle (Z = 0) a la imagen.
+    H: homografía de la calle a la imagen. X, Y: coordenadas en metros.
+    Devuelve el píxel (u, v).
+    '''
+    puntoHomogeneo = matvec(H, np.array([X, Y, 1]))
+    return puntoHomogeneo[:2] / puntoHomogeneo[2]
+
+def pendienteCuadradosMinimos(t, x):
+    '''
+    Devuelve la pendiente de la recta que ajusta x(t) por cuadrados mínimos.
+    t, x: arrays de igual longitud.
+    '''
+    return np.sum((t - np.mean(t)) * (x - np.mean(x))) / np.sum((t - np.mean(t)) ** 2)
+
 
 #%% Funciones ejercicio 6 -Dron
 

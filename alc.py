@@ -970,3 +970,32 @@ def aplicarPOSIT(obj_vecs, img_vecs, K, MaxIt=50, atol=1e-4):
 
     return mejor[1],mejor[2]
 
+# reproyecta puntos 3D a la imagen usando R,t y K
+# Parámetros: pose R,t, puntos 3D y matriz K.
+# Devuelve: coordenadas proyectadas en píxeles; None si quedan detrás.
+def reproyectar_puntos(R,t,objPts,K):
+    imgpts_proyectados = []
+    t_vec = np.array(t,dtype=float).reshape(3)
+    for pt in objPts:
+        M = np.array(pt,dtype=float).reshape(3) # [X,Y,Z] del punto
+        # aplicamos la rotacion al punto: R*M
+        RM = matvec(R,M)
+        # sumamos la traslacion
+        Pc = RM + t_vec
+        
+        # verificamos que el punto este adelante de la camara
+        if Pc[2] <= 0:
+            imgpts_proyectados.append([None,None])
+            continue
+        
+        # proyectamos con la matriz intrinseca K: p = K*Pc
+        p = matvec(K,Pc)
+        
+        # pasamos a coordenadas de pixeles dividiendo por la profundidad
+        u = p[0] / p[2]
+        v = p[1] / p[2]
+        
+        imgpts_proyectados.append([u,v])
+    return np.array(imgpts_proyectados, dtype=object)
+        
+    

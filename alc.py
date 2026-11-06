@@ -761,7 +761,7 @@ def imagenACalle(Hinversa, pixel):
     Hinversa: inversa de la homografía de la calle a la imagen. pixel: array (u, v).
     Devuelve la posición (X, Y) en metros.
     '''
-    puntoHomogeneo = alc.matvec(Hinversa, np.array([pixel[0], pixel[1], 1]))
+    puntoHomogeneo = matvec(Hinversa, np.array([pixel[0], pixel[1], 1]))
     return puntoHomogeneo[:2] / puntoHomogeneo[2]
 
 

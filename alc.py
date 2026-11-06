@@ -238,7 +238,7 @@ def QR_con_GS(A, tol=1e-12, retorna_nops=False):
     R = np.zeros((n, n))
     nops = 0
     for i in range(n):
-        v = A[:, i].copy()
+        v = np.array(A[:, i], copy=True)
         for j in range(i):
             R[j, i] = producto_escalar(Q[:, j], A[:, i])
             # restamos la proyección sobre q_j
@@ -560,9 +560,9 @@ def devolverMatricesCalibracion3d(M, restric=None):
     Q, R = QR_con_GS(multiplicacion_matrices(MprimaT, P))  # QR de M'^T P
 
     # K = P R^T P (espejar equivale a multiplicar por P, sin hacer el producto)
-    Kres = espejar(espejar(transpuesta(R), True), False).copy()
+    Kres = np.array(espejar(espejar(transpuesta(R), True), False), copy=True)
     # R = P Q^T
-    Rres = espejar(transpuesta(Q), True).copy()
+    Rres = np.array(espejar(transpuesta(Q), True), copy=True)
 
     if restric is not None:
         if restric in ('skew', 'skew-alfa'):  # skew = 0

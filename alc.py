@@ -82,7 +82,7 @@ def transpuesta(A):
 
 def matvec(A, v):
     """Producto matriz por vector: A v."""
-    m, n = np.shape(A)
+    m, n = A.shape
     if (n != len(v)):
         print('No se puede')
         return None
@@ -94,7 +94,7 @@ def matvec(A, v):
 
 def vecmat(v, A):
     """Producto vector por matriz: v^T A."""
-    m, n = np.shape(A)
+    m, n = A.shape
     if (len(v) != m):
         print('No se puede')
         return None
@@ -137,7 +137,7 @@ def matriz_inversa(A):
     Devuelve None si A no es cuadrada o si aparece un pivote nulo.
     """
     if es_matriz_inversible(A):
-        A = A.astype(float).copy()
+        A = np.array(A, dtype=float)
         n, m = A.shape
         I = np.zeros((n, n))
         for i in range(n):
@@ -172,7 +172,7 @@ def res_tri(L, b, inferior=True, tol=1e-12):
         [* * * 0]
         [* * * *]
     """
-    n, m = np.shape(L)
+    n, m = L.shape
     if n != m:
         print('Matriz no cuadrada')
         return None
@@ -546,7 +546,7 @@ def devolverMatricesCalibracion3d(M, restric=None):
         'skew-alfa'  -> las dos cosas
     Devuelve (R, t, K), con K normalizada para que K[2][2] = 1.
     """
-    if (np.shape(M) != (3, 4)):
+    if ( M.shape != (3, 4)):
         print('M no cumple el tamaño de la matriz de proyeccion pedida')
         return None, None, None
 
@@ -998,4 +998,3 @@ def reproyectar_puntos(R,t,objPts,K):
         imgpts_proyectados.append([u,v])
     return np.array(imgpts_proyectados, dtype=object)
         
-    

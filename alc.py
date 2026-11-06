@@ -2,7 +2,7 @@
 TP 2 - ÁLGEBRA LINEAL COMPUTACIONAL
 
 Grupo: Triangulados
-Integrantes: Posse Lucila, Ventroni Milena, Pili, Fran
+Integrantes: Posse Lucila, Ventroni Milena, Larreira Pilar, Krause Arnim Francisco 
 """
 
 #%% Imports

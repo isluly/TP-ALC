@@ -713,8 +713,21 @@ def obtenerPose2D(Hj, K):
 #%% Funciones ejercicio 4 - Futbol
 
 def cancha_a_imagen(H,UV): 
-    # H es la homografia que lleva de la cancha a la imagen
-    # UV son los puntos (N,2) en metros:
+
+    """
+    Proyecta puntos del plano de la cancha a la imagen mediante una homografía.
+
+    Parámetros:
+        H: matriz de homografía de 3x3 que transforma coordenadas
+           de la cancha en coordenadas de la imagen.
+        UV: matriz de Nx2 con las coordenadas (U, V) de los puntos
+            de la cancha, expresadas en metros.
+
+    Retorna:
+        Matriz de Nx2 con las coordenadas (u, v) de los puntos
+        proyectados en la imagen, expresadas en píxeles.
+    """
+
     N = len(UV)
     res = np.zeros((N,2))
     for i in range(N):
@@ -723,7 +736,21 @@ def cancha_a_imagen(H,UV):
         res[i][1] = p[1] / p[2]
     return res
 
-def imagen_a_cancha(H,uv): #uv son los puntos(N,2) en pixeles
+def imagen_a_cancha(H,uv): 
+    """
+    Transforma puntos de la imagen al plano de la cancha mediante
+    la inversa de una homografía.
+
+    Parámetros:
+        H: matriz de homografía de 3x3 que transforma coordenadas
+           de la cancha en coordenadas de la imagen.
+        uv: matriz de Nx2 con las coordenadas (u, v) de los puntos
+            en la imagen, expresadas en píxeles.
+
+    Retorna:
+        Matriz de Nx2 con las coordenadas (U, V) de los puntos
+        transformados al plano de la cancha, expresadas en metros.
+    """
 
     Hinv = matriz_inversa(H)
     N = len(uv)
@@ -737,29 +764,31 @@ def imagen_a_cancha(H,uv): #uv son los puntos(N,2) en pixeles
 #%% Funciones ejercicio 5 - Salguero
 
 def calleAImagen(H, X, Y):
-    '''
+    """
     Proyecta un punto de la calle (Z = 0) a la imagen.
     H: homografía de la calle a la imagen. X, Y: coordenadas en metros.
     Devuelve el píxel (u, v).
-    '''
+
+    """
     puntoHomogeneo = matvec(H, np.array([X, Y, 1]))
     return puntoHomogeneo[:2] / puntoHomogeneo[2]
 
 def imagenACalle(Hinversa, pixel):
-    '''
+    """
     Lleva un píxel al plano de la calle.
     Hinversa: inversa de la homografía de la calle a la imagen. pixel: array (u, v).
     Devuelve la posición (X, Y) en metros.
-    '''
+    """
+
     puntoHomogeneo = matvec(Hinversa, np.array([pixel[0], pixel[1], 1]))
     return puntoHomogeneo[:2] / puntoHomogeneo[2]
 
 
 def pendienteCuadradosMinimos(t, x):
-    '''
+    """
     Devuelve la pendiente de la recta que ajusta x(t) por cuadrados mínimos.
     t, x: arrays de igual longitud.
-    '''
+    """
     return np.sum((t - np.mean(t)) * (x - np.mean(x))) / np.sum((t - np.mean(t)) ** 2)
 
 

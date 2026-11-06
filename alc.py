@@ -593,16 +593,6 @@ def devolverMatricesCalibracion3d(M, restric=None):
 
     return Rres, t, Kres
 
-
-def imgpts_del_cuadro(k):
-    """Devuelve los 12 puntos (u, v) del cuadro k como matriz de 12 x 2."""
-    fila = datos[k]
-    imgPts = np.zeros((12, 2))
-    for i in range(12):
-        imgPts[i, 0] = fila[2*i]      # u_i
-        imgPts[i, 1] = fila[2*i + 1]  # v_i
-    return imgPts
-
 #%% Funciones ejercicio 3 - Calibración con patrón plano
 
 def obtenerQ2d(imgPts, objPts):

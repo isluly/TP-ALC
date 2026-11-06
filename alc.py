@@ -755,6 +755,16 @@ def calleAImagen(H, X, Y):
     puntoHomogeneo = matvec(H, np.array([X, Y, 1]))
     return puntoHomogeneo[:2] / puntoHomogeneo[2]
 
+def imagenACalle(Hinversa, pixel):
+    '''
+    Lleva un píxel al plano de la calle.
+    Hinversa: inversa de la homografía de la calle a la imagen. pixel: array (u, v).
+    Devuelve la posición (X, Y) en metros.
+    '''
+    puntoHomogeneo = alc.matvec(Hinversa, np.array([pixel[0], pixel[1], 1]))
+    return puntoHomogeneo[:2] / puntoHomogeneo[2]
+
+
 def pendienteCuadradosMinimos(t, x):
     '''
     Devuelve la pendiente de la recta que ajusta x(t) por cuadrados mínimos.

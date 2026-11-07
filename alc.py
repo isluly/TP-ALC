@@ -588,8 +588,9 @@ def devolverMatricesCalibracion3d(M, restric=None):
 
     if det_Mprima < 0:
         M = -M
-        Mprima = M[:, :3]
-        MprimaT = transpuesta(Mprima)
+    
+    Mprima = M[:, :3]
+    MprimaT = transpuesta(Mprima)
 
     P = np.array([
         [0, 0, 1],

@@ -569,51 +569,77 @@ def devolverMatricesCalibracion3d(M, restric=None):
         'skew'       -> skew = 0
         'alfa'       -> alfa_u = alfa_v
         'skew-alfa'  -> las dos cosas
+
     Devuelve (R, t, K), con K normalizada para que K[2][2] = 1.
     """
-    if ( M.shape != (3, 4)):
-        print('M no cumple el tamaño de la matriz de proyeccion pedida')
+    if M.shape != (3, 4):
+        print('M no cumple el tamaño de la matriz de proyección pedida')
         return None, None, None
-
-    if (M[2][3] < 0):  # corregimos el signo
-        M = -M
 
     Mprima = M[:, :3]
     MprimaT = transpuesta(Mprima)
-    P = np.array([[0, 0, 1], [0, 1, 0], [1, 0, 0]])
+
+    # Elegimos el signo para que la rotación recuperada tenga det(R) = 1.
+    det_Mprima = (
+        M[0, 0] * (M[1, 1] * M[2, 2] - M[1, 2] * M[2, 1])
+        - M[0, 1] * (M[1, 0] * M[2, 2] - M[1, 2] * M[2, 0])
+        + M[0, 2] * (M[1, 0] * M[2, 1] - M[1, 1] * M[2, 0])
+    )
+
+    if det_Mprima < 0:
+        M = -M
+        Mprima = M[:, :3]
+        MprimaT = transpuesta(Mprima)
+
+    P = np.array([
+        [0, 0, 1],
+        [0, 1, 0],
+        [1, 0, 0]
+    ])
 
     Q, R = QR_con_GS(multiplicacion_matrices(MprimaT, P))  # QR de M'^T P
 
-    # K = P R^T P (espejar equivale a multiplicar por P, sin hacer el producto)
+    # K = P R^T P (espejar equivale a multiplicar por P, sin hacer el producto).
     Kres = np.array(espejar(espejar(transpuesta(R), True), False), copy=True)
+
     # R = P Q^T
     Rres = np.array(espejar(transpuesta(Q), True), copy=True)
 
     if restric is not None:
+
         if restric in ('skew', 'skew-alfa'):  # skew = 0
             Kres[0][1] = 0.0
+
         if restric in ('alfa', 'skew-alfa'):  # alfa_u = alfa_v (promedio de los dos)
             Kres[0][0] = (Kres[0][0] + Kres[1][1]) / 2
             Kres[1][1] = Kres[0][0]
 
-        # recalculamos R con el nuevo K para que K R = M'
+        # Recalculamos R con el nuevo K para que K R = M'.
         Rres = np.zeros((3, 3))
+
         for j in range(3):
             Rres[:, j] = res_tri(Kres, Mprima[:, j], inferior=False)
 
-        # ortonormalizamos R (Gram-Schmidt sobre las filas, desde la última).
+        # Ortonormalizamos R (Gram-Schmidt sobre las filas, desde la última).
         # Ojo: después de esto K R aproxima M', ya no es exacto.
         r3 = Rres[2] / norma(Rres[2], 2)
-        r2 = Rres[1] - producto_escalar(Rres[1], r3)*r3
+
+        r2 = Rres[1] - producto_escalar(Rres[1], r3) * r3
         r2 = r2 / norma(r2, 2)
-        r1 = Rres[0] - producto_escalar(Rres[0], r3)*r3 - producto_escalar(Rres[0], r2)*r2
+
+        r1 = (
+            Rres[0]
+            - producto_escalar(Rres[0], r3) * r3
+            - producto_escalar(Rres[0], r2) * r2
+        )
         r1 = r1 / norma(r1, 2)
+
         Rres = np.array([r1, r2, r3])
 
-    # t sale de resolver K t = (cuarta columna de M)
+    # t sale de resolver K t = (cuarta columna de M).
     t = res_tri(Kres, M[:, 3], inferior=False)
 
-    # normalizamos K para que K[2][2] = 1
+    # Normalizamos K para que K[2][2] = 1.
     Kres = Kres / Kres[2][2]
 
     return Rres, t, Kres

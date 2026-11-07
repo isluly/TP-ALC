@@ -2,7 +2,7 @@
 TP 2 - ÁLGEBRA LINEAL COMPUTACIONAL
 
 Grupo: Triangulados
-Integrantes: Posse Lucila, Ventroni Milena, Larreira Pilar, Krause Arnim Francisco 
+Integrantes: Posse Lucila, Ventroni Milena, Larriera Pilar, Krause Arnim Francisco 
 """
 
 #%% Imports
@@ -374,30 +374,51 @@ def calculaCholesky(A, atol=1e-10):
 #%% Módulo ALC - Autovalores y SVD
 
 
-def metpot2k(A, tol=1e-13, K=10000): 
+def metpot2k(A, tol=1e-15, K=10000): 
     """
         Método de la potencia. Devuelve (autovector, autovalor dominante, iteraciones).
         En cada iteración aplica A dos veces(v <- A(Av)) y normaliza con norma 2. Itera hasta que el vector deja de cambiar de dirección o hasta llegar a k iteraciones
     """
-    K = int(K) 
-    n = A.shape[0] 
-    v = np.random.rand(n) 
-    v = v / norma(v, 2) 
-    
-    # primera iteracion: dos multiplicaciones
-    w = matvec(A,matvec(A,v)) 
-    v_nuevo = w / norma(w,2) 
-    e = producto_escalar(v_nuevo, v) 
-    k = 1
-     
-    while np.abs(e - 1) > tol and k < K: 
-        v = v_nuevo 
-        w = matvec(A,matvec(A,v)) 
-        v_nuevo = w / norma(w,2) 
-        e = producto_escalar(v_nuevo,v) 
-        k += 1 
-    lam = producto_escalar(v_nuevo, matvec(A,v_nuevo)) 
-    return v,lam,K
+    """
+    Método de la potencia aplicado dos veces a A (v <- A(Av)).
+    Devuelve el autovector dominante, el autovalor asociado
+    y la cantidad de iteraciones realizadas.
+    """
+    K = int(K)
+    n = A.shape[0]
+
+    # Inicializamos con un vector determinístico.
+    v = np.ones(n)
+    v = v / norma(v, 2)
+
+    k = 0
+
+    for i in range(K):
+        # Aplicamos A dos veces para buscar el autovalor de mayor módulo.
+        w = matvec(A, matvec(A, v))
+        nw = norma(w, 2)
+
+        if nw == 0:
+            return None, None, k
+
+        v_nuevo = w / nw
+        k += 1
+
+        # Como aplicamos A^2, los vectores consecutivos
+        # tienden a tener el mismo sentido.
+        e = producto_escalar(v_nuevo, v)
+
+        if 1 - e <= tol:
+            v = v_nuevo
+            break
+
+        v = v_nuevo
+
+    # Calculamos el autovalor mediante el cociente de Rayleigh.
+    Av = matvec(A, v)
+    lam = producto_escalar(v, Av) / producto_escalar(v, v)
+
+    return v, lam, k
 
 
 def diagRH(A, tol=1e-15, K=1e5):

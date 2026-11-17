@@ -1,5 +1,5 @@
 import numpy as np
-from alc import matvec,matriz_inversa,resolverDLT2D,obtenerQ2d
+from alc import matvec,matriz_inversa,resolverDLT2D,obtenerQ2d,norma
 import matplotlib.pyplot as plt
 import os
 
@@ -42,6 +42,60 @@ print(np.abs(rep - imgPts).max())
 pie_e = np.array([[808,541]]) # aca van los pixeles que me de el pie de enzo
 UV = imagen_a_cancha(H,pie_e)
 print("enzo en cancha :", UV, " distancia en metros a la linea de gol: ",UV[0][0])
+
+
+
+
+# estimamos para ver si esta bien los puntos 1,2,3,4 o 1,2,3,4,5,6
+def estimar(indice, imgPts):
+    Q = obtenerQ2d(imgPts[indice], objPts[indice])
+    H = resolverDLT2D(Q)
+    return H / H[2,2]
+
+def dist_enzo(H):
+    return imagen_a_cancha(H,pie_e)[0][0]
+
+conjuntos = {
+    "1-2-3-4 (agrupados)":  [0, 1, 2, 3],
+    "1-2-5-6 (repartidos)": [0, 1, 4, 5],
+    "los 7":                list(range(7)),
+}
+
+err_click = 1.0      # px de error de clic
+M = 1000
+rng = np.random.default_rng(0)
+
+for nombre, idx in conjuntos.items():
+    d0 = dist_enzo(estimar(idx,imgPts))        
+    ds = []
+    for _ in range(M):
+        # le suma ruido aleatorio a cada coordenada de pixel, simulando que clickeamos con un pequeño error
+        img_ruido = imgPts + rng.normal(0, err_click, imgPts.shape)
+        ds.append(dist_enzo(estimar(idx, img_ruido)))
+    ds = np.array(ds)
+    # desvio: std, mide que tan sensible es el resultado a un error de click de 1 px
+    print(f"{nombre}: sin ruido = {d0:.2f} m | media = {ds.mean():.2f} m | std = {ds.std():.2f} m")
+
+ref = imagen_a_cancha(estimar(list(range(7)), imgPts), pie_e)[0]
+
+for nombre, idx in conjuntos.items():
+    pos = imagen_a_cancha(estimar(idx, imgPts), pie_e)[0]
+    dx = pos[0] - ref[0]
+    dy = pos[1] - ref[1]
+    print(nombre, "| pos: (%.2f, %.2f) m" % (pos[0], pos[1]),
+          "| dif vs 7 puntos: %.2f m" % ((dx**2 + dy**2) ** 0.5))
+    
+# calcula la homografia solo usando los puntos 1,2,3,4
+H = estimar([0, 1, 2, 3], imgPts)
+# toma los puntos que no entraron 5,6, y 7 y con esa H predice los metros de la cancha
+pred = imagen_a_cancha(H, imgPts[[4, 5, 6]])
+
+# calcula el error
+dif = pred - objPts[[4, 5, 6]]
+for i in range(3):
+    print("punto", [4, 5, 6][i], ": %.2f m" % ((dif[i, 0]**2 + dif[i, 1]**2) ** 0.5))
+
+
 
 # circulos de 1m
 ruta_img = os.path.join("futbol", "test-gol-enzo-marcada.png") # reemplazar por imagen con puntos marcados en los pies y en los arcos?
